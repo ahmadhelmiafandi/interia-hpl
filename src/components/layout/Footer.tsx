@@ -85,7 +85,7 @@ export default function Footer({ cmsData }: FooterProps) {
                     <ul className="space-y-4">
                         <li className="flex gap-3 text-sm items-start">
                             <MapPin size={18} className="text-indigo-400 shrink-0 mt-0.5" />
-                            <span className="leading-relaxed">{settings?.footer?.address || 'GRGQ+X39, Dermayu, Bumiharjo, Kec. Keling, Kabupaten Jepara, Jawa Tengah 59454'}</span>
+                            <span className="leading-relaxed">{settings?.footer?.address || 'Jl. Raya Bogor KM 42, Depan GOR Pakansari'}</span>
                         </li>
                         <li className="flex gap-3 text-sm items-center">
                             <Phone size={18} className="text-indigo-400 shrink-0" />

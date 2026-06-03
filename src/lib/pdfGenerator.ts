@@ -102,6 +102,7 @@ interface BOMData {
 
 interface Quotation3DPDFParams {
   bom: BOMData;
+  roomConfig?: RoomConfig;
   customer?: CustomerInfo;
 }
 
@@ -214,7 +215,7 @@ export async function generateQuotationPDF({ config, metadata, estimatedPrice, c
         doc.setPage(i);
         doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
-        doc.text('Afandi Interior - Workshop: Dermayu, Bumiharjo, Kec. Keling, Jepara, Jawa Tengah 59454', 105, 285, { align: 'center' });
+        doc.text('Afandi Interior - Workshop: Jl. Raya Bogor KM 42, Depan GOR Pakansari', 105, 285, { align: 'center' });
         doc.text(`Halaman ${i} dari ${pageCount}`, 105, 290, { align: 'center' });
     }
 
@@ -225,7 +226,7 @@ export async function generateQuotationPDF({ config, metadata, estimatedPrice, c
 /**
  * generate3DQuotationPDF — Export Quotation PDF dari 3D Configurator
  */
-export async function generate3DQuotationPDF({ bom, customer }: Quotation3DPDFParams): Promise<void> {
+export async function generate3DQuotationPDF({ bom, roomConfig, customer }: Quotation3DPDFParams): Promise<void> {
     const doc = new jsPDF();
     const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
     const quoteNo = `AFN-3D-${Date.now().toString().slice(-6)}`;
@@ -234,46 +235,65 @@ export async function generate3DQuotationPDF({ bom, customer }: Quotation3DPDFPa
     doc.setFillColor(...colorEspresso);
     doc.rect(0, 0, 210, 42, 'F');
 
+    // Decorative Gold Accent Line
+    doc.setFillColor(...colorGold);
+    doc.rect(0, 42, 210, 3, 'F');
+
+    // Title / Brand
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
+    doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
-    doc.text('AFANDI INTERIOR 3D', 20, 23);
+    doc.text('AFANDI INTERIOR', 20, 21);
 
-    doc.setFontSize(10);
+    doc.setFontSize(8.5);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(200, 200, 200);
-    doc.text('Quotation Desain Interior 3D Interaktif', 20, 31);
+    doc.setTextColor(210, 210, 210);
+    doc.text('Custom Modern Furniture & Interior Specialist', 20, 28);
+    doc.text('Workshop: Jl. Raya Bogor KM 42, Depan GOR Pakansari', 20, 33);
 
-    // Quote details
+    // Quote details (Right aligned)
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(9);
-    doc.text(`Quotation No: ${quoteNo}`, 145, 18);
-    doc.text(`Tanggal: ${dateStr}`, 145, 24);
-    doc.text(`Tipe Konfigurasi: Kustom 3D`, 145, 30);
-
-    // --- CUSTOMER INFO ---
-    doc.setTextColor(...colorEspresso);
-    doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text('DATA PELANGGAN', 20, 56);
+    doc.text('SURAT PENAWARAN HARGA (3D)', 190, 18, { align: 'right' });
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(210, 210, 210);
+    doc.text(`No: ${quoteNo}`, 190, 24, { align: 'right' });
+    doc.text(`Tanggal: ${dateStr}`, 190, 30, { align: 'right' });
+    doc.text(`Tipe: Kustom 3D Configurator`, 190, 36, { align: 'right' });
 
-    autoTable(doc, {
-        startY: 60,
-        margin: { left: 20 },
-        theme: 'plain',
-        body: [
-            ['Nama Pelanggan', customer?.name || '-'],
-            ['WhatsApp', customer?.phone || '-'],
-            ['Alamat Survey', customer?.address || '-'],
-        ],
-        bodyStyles: { fontSize: 10, cellPadding: 2.5 },
-        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 40, textColor: colorEspresso } }
-    });
+    // --- CUSTOMER & ROOM INFO PANEL ---
+    doc.setFillColor(248, 250, 252); // slate-50
+    doc.rect(20, 52, 170, 36, 'F');
+    doc.setDrawColor(226, 232, 240); // slate-200
+    doc.rect(20, 52, 170, 36, 'S');
+
+    doc.setTextColor(...colorEspresso);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PELANGGAN:', 25, 60);
+    doc.text('INFORMASI RUANGAN:', 115, 60);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Nama: ${customer?.name || '-'}`, 25, 67);
+    doc.text(`WhatsApp: ${customer?.phone || '-'}`, 25, 73);
+    doc.text(`Alamat: ${customer?.address || '-'}`, 25, 79);
+
+    if (roomConfig) {
+      doc.text(`Lebar Ruang: ${roomConfig.width} cm`, 115, 67);
+      doc.text(`Panjang Ruang: ${roomConfig.length} cm`, 115, 73);
+      doc.text(`Tinggi Ruang: ${roomConfig.height} cm`, 115, 79);
+    } else {
+      doc.text('Spesifikasi Ruangan: -', 115, 67);
+    }
 
     // --- BILL OF MATERIALS TABLE ---
-    doc.setFontSize(12);
+    doc.setTextColor(...colorEspresso);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('DAFTAR FURNITUR & BILL OF MATERIALS (BOM) 3D', 20, (doc as any).lastAutoTable.finalY + 14);
+    doc.text('BILL OF MATERIALS (BOM) & RINCIAN FURNITUR', 20, 99);
 
     const tableRows = bom.items.map((item, index) => {
       const matStr = item.materials.map(m => 
@@ -292,49 +312,102 @@ export async function generate3DQuotationPDF({ bom, customer }: Quotation3DPDFPa
     });
 
     autoTable(doc, {
-        startY: (doc as any).lastAutoTable.finalY + 19,
+        startY: 104,
         margin: { left: 20, right: 20 },
-        headStyles: { fillColor: colorGold, textColor: 255, fontStyle: 'bold', fontSize: 9 },
-        head: [['No', 'Modul Furnitur', 'Dimensi (cm)', 'Spesifikasi Material / HPL', 'Subtotal']],
+        headStyles: { fillColor: colorEspresso, textColor: 255, fontStyle: 'bold', fontSize: 9 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        head: [['No', 'Modul Furnitur', 'Dimensi', 'Spesifikasi Material / HPL', 'Subtotal']],
         body: tableRows,
         columnStyles: {
             0: { cellWidth: 10, halign: 'center' },
             1: { cellWidth: 40, fontStyle: 'bold' },
             2: { cellWidth: 35 },
             3: { cellWidth: 55, fontSize: 8.5 },
-            4: { cellWidth: 30, halign: 'right', fontStyle: 'bold', textColor: colorEspresso }
+            4: { cellWidth: 30, halign: 'right', fontStyle: 'bold', textColor: colorGold }
         },
-        styles: { fontSize: 9.5, cellPadding: 4, valign: 'middle' }
+        styles: { 
+            fontSize: 9, 
+            cellPadding: 5, 
+            valign: 'middle',
+            lineColor: [226, 232, 240],
+            lineWidth: 0.1
+        }
     });
 
-    // --- PRICING SUMMARY ---
-    const finalY: number = (doc as any).lastAutoTable.finalY + 15;
+    // --- PRICING SUMMARY & SIGNATURES ---
+    let currentY = (doc as any).lastAutoTable.finalY + 12;
     
-    // Check if total summary fits on this page
-    let currentY = finalY;
-    if (currentY > 230) {
+    // Safety check for page break (need at least 95 units height for summary + terms + signatures)
+    if (currentY > 180) {
       doc.addPage();
-      currentY = 30;
+      currentY = 25;
     }
 
-    doc.setFillColor(248, 250, 252); // slate-50
-    doc.rect(20, currentY, 170, 32, 'F');
-    doc.setDrawColor(226, 232, 240); // slate-200
-    doc.rect(20, currentY, 170, 32, 'S');
+    // Draw total summary card
+    doc.setFillColor(...colorEspresso);
+    doc.rect(20, currentY, 170, 26, 'F');
+    // Accent gold stripe on the left of the total card
+    doc.setFillColor(...colorGold);
+    doc.rect(20, currentY, 3, 26, 'F');
+
+    doc.setTextColor(230, 230, 230);
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'bold');
+    doc.text('TOTAL ESTIMASI HARGA PRODUKSI (3D):', 28, currentY + 10);
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(15);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Rp ${bom.total.toLocaleString('id-ID')}`, 28, currentY + 19);
+
+    // Right-aligned status stamp inside the box
+    doc.setTextColor(...colorGold);
+    doc.setFontSize(9);
+    doc.text('SANDBOX DEMO APPROVED', 185, currentY + 15, { align: 'right' });
+
+    // --- TERMS & CONDITIONS ---
+    doc.setTextColor(...colorEspresso);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('SYARAT & KETENTUAN PRODUKSI:', 20, currentY + 36);
+    
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    const terms = [
+        '1. Nilai penawaran di atas adalah estimasi awal berdasarkan modul 3D yang dipilih.',
+        '2. Harga final & spesifikasi detail akan ditentukan setelah survey lapangan oleh tim teknis kami.',
+        '3. Produksi akan dimulai setelah pembayaran Down Payment (DP) minimal sebesar 50%.',
+        '4. Waktu pengerjaan berkisar antara 14-21 hari kerja setelah desain disetujui (ACC).',
+        '5. Pelunasan dilakukan maksimal 3 hari setelah instalasi selesai dilakukan di lokasi.',
+    ];
+    let termsY = currentY + 42;
+    terms.forEach(term => {
+        doc.text(term, 20, termsY);
+        termsY += 4.5;
+    });
+
+    // --- SIGNATURES ---
+    let sigY = termsY + 8;
+    if (sigY > 255) {
+      doc.addPage();
+      sigY = 25;
+    }
+    
+    // Draw signature line divider
+    doc.setDrawColor(240, 240, 240);
+    doc.line(20, sigY - 2, 190, sigY - 2);
 
     doc.setTextColor(...colorEspresso);
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.text('TOTAL ESTIMASI HARGA PRODUKSI (3D):', 28, currentY + 12);
-
-    doc.setTextColor(...colorGold);
-    doc.setFontSize(19);
-    doc.text(`Rp ${bom.total.toLocaleString('id-ID')}`, 28, currentY + 23);
-
-    doc.setTextColor(130, 130, 130);
-    doc.setFontSize(8.5);
-    doc.text('*Harga di atas mencakup pembuatan plywood kabinet, finishing HPL Taco/Aica, hinges soft-close, pengiriman, & instalasi.', 20, currentY + 42);
-    doc.text('*Harga final akan disesuaikan setelah tim Afandi Interior melakukan survey pengukuran langsung ke lokasi Anda.', 20, currentY + 47);
+    doc.text('Persetujuan Pelanggan,', 45, sigY + 5, { align: 'center' });
+    doc.text('Hormat Kami,', 165, sigY + 5, { align: 'center' });
+    
+    doc.setTextColor(150, 150, 150);
+    doc.setFont('helvetica', 'normal');
+    doc.text('(____________________)', 45, sigY + 28, { align: 'center' });
+    doc.text('Afandi Interior', 165, sigY + 28, { align: 'center' });
 
     // --- FOOTER ON ALL PAGES ---
     const pageCount = (doc as any).internal.getNumberOfPages();
@@ -342,7 +415,7 @@ export async function generate3DQuotationPDF({ bom, customer }: Quotation3DPDFPa
         doc.setPage(i);
         doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
-        doc.text('Afandi Interior - Workshop: Dermayu, Bumiharjo, Kec. Keling, Jepara, Jawa Tengah 59454', 105, 285, { align: 'center' });
+        doc.text('Afandi Interior - Workshop: Jl. Raya Bogor KM 42, Depan GOR Pakansari', 105, 285, { align: 'center' });
         doc.text(`Halaman ${i} dari ${pageCount}`, 105, 290, { align: 'center' });
     }
 

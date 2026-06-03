@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSceneState } from '../hooks/useSceneState';
 import { generate3DQuotationPDF } from '../lib/pdfGenerator.ts';
+import { api } from '../lib/api';
 import { 
   X, 
   User, 
@@ -35,7 +36,7 @@ type Step = 'info' | 'review' | 'payment-method' | 'gateway' | 'success';
 type PaymentMethod = 'va_bca' | 'va_mandiri' | 'qris' | 'credit_card';
 
 export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
-  const { placedItems, getBOM, resetScene } = useSceneState();
+  const { placedItems, getBOM, resetScene, roomConfig } = useSceneState();
   const bom = getBOM();
 
   const [step, setStep] = useState<Step>('info');
@@ -57,6 +58,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
   const [invoiceId, setInvoiceId] = useState('');
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes countdown for VA/QRIS
   const [copied, setCopied] = useState(false);
+  const [shopPhone, setShopPhone] = useState('6281234567890'); // Fallback number
 
   // Credit card form states
   const [ccNumber, setCcNumber] = useState('');
@@ -68,13 +70,41 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
   // References
   const timerRef = useRef<any>(null);
 
-  // Generate unique invoice number on checkout initialization
+  // Fetch shop WhatsApp phone number from CMS settings
   useEffect(() => {
-    if (isOpen && !invoiceId) {
+    const fetchPhone = async () => {
+      try {
+        const settings = await api.getSettings();
+        if (settings?.contact?.phone) {
+          const digitsOnly = settings.contact.phone.replace(/[^0-9]/g, '');
+          if (digitsOnly) setShopPhone(digitsOnly);
+        }
+      } catch (err) {
+        console.error('Gagal mengambil kontak WhatsApp:', err);
+      }
+    };
+    fetchPhone();
+  }, []);
+
+  // Reset all states and generate unique invoice number on checkout initialization/reopen
+  useEffect(() => {
+    if (isOpen) {
+      setStep('info');
+      setPaymentStatus('idle');
+      setIsProcessing(false);
+      setErrors({});
+      setCopied(false);
+      
+      setCcNumber('');
+      setCcName('');
+      setCcExpiry('');
+      setCcCvv('');
+      setCcFocus('front');
+
       const rand = Math.floor(10000 + Math.random() * 90000);
       setInvoiceId(`INV-AFN-2026-${rand}`);
     }
-  }, [isOpen, invoiceId]);
+  }, [isOpen]);
 
   // Countdown timer for payment gateway
   useEffect(() => {
@@ -158,6 +188,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
     try {
       await generate3DQuotationPDF({
         bom,
+        roomConfig,
         customer: {
           name: customer.name,
           phone: customer.phone,
@@ -176,11 +207,12 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
       `• Nama: *${customer.name}*\n` +
       `• WhatsApp: *${customer.phone}*\n` +
       `• Alamat: *${customer.address}*\n` +
+      `• Dimensi Ruangan: *L ${roomConfig.width} x P ${roomConfig.length} x T ${roomConfig.height} cm*\n` +
       `• Total Pesanan: *Rp ${bom.total.toLocaleString('id-ID')}* (${bom.items.length} Modul)\n\n` +
       `Link file PDF Quotation telah diunduh. Mohon dijadwalkan survey lokasi untuk finalisasi produksi. Terima kasih!`;
     
     const encodedText = encodeURIComponent(message);
-    window.open(`https://wa.me/628123456789?text=${encodedText}`, '_blank');
+    window.open(`https://wa.me/${shopPhone}?text=${encodedText}`, '_blank');
   };
 
   const handleFinishCheckout = () => {
@@ -413,6 +445,21 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                     <span className="text-xs font-bold text-amber-400">Rp {item.subtotal.toLocaleString('id-ID')}</span>
                   </div>
                 ))}
+              </div>
+
+              {/* Room Dimensions Display */}
+              <div className="bg-slate-950/20 border border-slate-800/80 rounded-2xl p-4.5 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 flex-shrink-0">
+                  <Building size={18} />
+                </div>
+                <div className="flex-1">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500 block mb-1">Dimensi Ruangan Rencana</span>
+                  <div className="text-xs text-slate-300 font-semibold">
+                    Lebar: <span className="text-slate-100 font-bold">{roomConfig.width} cm</span> &nbsp;•&nbsp; 
+                    Panjang: <span className="text-slate-100 font-bold">{roomConfig.length} cm</span> &nbsp;•&nbsp; 
+                    Tinggi: <span className="text-slate-100 font-bold">{roomConfig.height} cm</span>
+                  </div>
+                </div>
               </div>
 
               {/* Total Card */}
