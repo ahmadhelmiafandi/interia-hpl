@@ -227,7 +227,7 @@ export default function GridCalibration() {
       
       {/* Visual instructions badge */}
       <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-950/80 backdrop-blur border border-teal-500/30 px-5 py-3 rounded-full text-center text-xs text-teal-300 shadow-xl max-w-sm pointer-events-auto">
-        🔧 Geser **4 Titik Neon** untuk menyelaraskan dengan **4 sudut lantai asli** di foto Anda.
+        🔧 Geser <strong className="font-bold text-white">4 Titik Neon</strong> untuk menyelaraskan dengan <strong className="font-bold text-white">4 sudut lantai asli</strong> di foto Anda.
       </div>
     </div>
   );

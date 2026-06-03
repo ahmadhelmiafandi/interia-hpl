@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSceneState } from '../../../hooks/useSceneState';
-import { Sliders, Move, RotateCw, Maximize2, Trash2 } from 'lucide-react';
+import { Sliders, Move, RotateCw, Maximize2, Trash2, Copy } from 'lucide-react';
 
 export default function PropertiesPanel() {
   const { 
@@ -8,7 +8,8 @@ export default function PropertiesPanel() {
     selectedItemId, 
     itemsCatalog, 
     updateItemTransform, 
-    removeItem 
+    removeItem,
+    duplicateItem
   } = useSceneState();
 
   const selectedItem = placedItems.find(item => item.id === selectedItemId);
@@ -62,7 +63,8 @@ export default function PropertiesPanel() {
   };
 
   const currentWidth = Math.round(catalogItem.default_width * selectedItem.scale[0]);
-  const currentRotationDeg = Math.round((selectedItem.rotationY * 180) / Math.PI);
+  // Normalize rotation degrees to [0, 359] to prevent slider from getting stuck at 360
+  const currentRotationDeg = ((Math.round((selectedItem.rotationY * 180) / Math.PI) % 360) + 360) % 360;
 
   const canScaleX = catalogItem.scalable_axis?.includes('x');
 
@@ -81,14 +83,23 @@ export default function PropertiesPanel() {
       <div className="bg-slate-950/45 rounded-xl border border-slate-800 p-3 mt-4 flex justify-between items-center">
         <div>
           <h4 className="font-semibold text-xs text-slate-200">{catalogItem.name}</h4>
-          <span className="text-[10px] text-slate-500 font-mono">ID: {selectedItem.id}</span>
+          <span className="text-[10px] text-slate-500 font-mono">ID: {selectedItem.id.slice(-8)}</span>
         </div>
-        <button
-          onClick={() => removeItem(selectedItem.id)}
-          className="px-2.5 py-1.5 rounded-lg bg-red-500/15 border border-red-500/25 hover:bg-red-500 text-red-400 hover:text-white transition-all text-[10px] font-bold flex items-center gap-1 active:scale-95"
-        >
-          <Trash2 size={11} /> Hapus
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => duplicateItem(selectedItem.id)}
+            className="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:bg-slate-700 hover:border-slate-600 text-slate-300 hover:text-white transition-all text-[10px] font-bold flex items-center gap-1 active:scale-95"
+            title="Duplikat item ini"
+          >
+            <Copy size={10} /> Duplikat
+          </button>
+          <button
+            onClick={() => removeItem(selectedItem.id)}
+            className="px-2.5 py-1.5 rounded-lg bg-red-500/15 border border-red-500/25 hover:bg-red-500 text-red-400 hover:text-white transition-all text-[10px] font-bold flex items-center gap-1 active:scale-95"
+          >
+            <Trash2 size={10} /> Hapus
+          </button>
+        </div>
       </div>
 
       {/* Controls Container */}
@@ -134,10 +145,10 @@ export default function PropertiesPanel() {
               <span className="text-slate-400">Sudut (Y-Axis):</span>
               <span className="text-teal-400">{currentRotationDeg}°</span>
             </div>
-            <input
+          <input
               type="range"
               min={0}
-              max={360}
+              max={359}
               step={15}
               value={currentRotationDeg}
               onChange={(e) => handleRotationChange(e.target.value)}

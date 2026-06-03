@@ -3,7 +3,7 @@ import { useSceneState } from '../../../hooks/useSceneState';
 import { FileDown, Trash2, Hammer, Layers, AlertCircle, ShoppingCart } from 'lucide-react';
 import { generate3DQuotationPDF } from '../../../lib/pdfGenerator.ts';
 
-export default function BOMPanel() {
+export default function BOMPanel({ onCheckout }: { onCheckout?: () => void }) {
   const { placedItems, getBOM, removeItem } = useSceneState();
   const bom = getBOM();
   
@@ -123,18 +123,33 @@ export default function BOMPanel() {
             *Sudah termasuk bahan plywood, instalasi standar HPL, & fitting.
           </p>
 
-          <button
-            onClick={() => bom.items.length > 0 && setShowExportModal(true)}
-            disabled={bom.items.length === 0}
-            className={`w-full mt-4 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm tracking-wide shadow-lg transition-all duration-300 ${
-              bom.items.length > 0
-                ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-teal-500/25 hover:shadow-teal-500/40 hover:scale-[1.02] active:scale-95 cursor-pointer'
-                : 'bg-slate-800 text-slate-500 shadow-none cursor-not-allowed opacity-50'
-            }`}
-          >
-            <FileDown size={16} />
-            Export Quotation PDF
-          </button>
+          <div className="flex flex-col gap-2 mt-4">
+            <button
+              onClick={() => bom.items.length > 0 && onCheckout?.()}
+              disabled={bom.items.length === 0}
+              className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-sm tracking-wide shadow-lg transition-all duration-300 ${
+                bom.items.length > 0
+                  ? 'bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white shadow-teal-500/20 hover:scale-[1.02] active:scale-95 cursor-pointer animate-pulse'
+                  : 'bg-slate-800 text-slate-500 shadow-none cursor-not-allowed opacity-50'
+              }`}
+            >
+              <ShoppingCart size={16} />
+              Pesan & Bayar Sekarang
+            </button>
+
+            <button
+              onClick={() => bom.items.length > 0 && setShowExportModal(true)}
+              disabled={bom.items.length === 0}
+              className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-xs tracking-wide transition-all duration-300 ${
+                bom.items.length > 0
+                  ? 'bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white cursor-pointer'
+                  : 'bg-slate-800 text-slate-500 shadow-none cursor-not-allowed opacity-50'
+              }`}
+            >
+              <FileDown size={14} />
+              Unduh Draft Quotation (PDF)
+            </button>
+          </div>
         </div>
       </div>
 

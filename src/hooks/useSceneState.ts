@@ -25,6 +25,8 @@ export interface SceneState {
   roomConfig: RoomConfig;
   backgroundPhotoUrl: string | null;
   isLocked: boolean;
+  isDraggingItem: boolean;
+  isLoadingCatalog: boolean;
   cameraConfig: CameraConfig;
   calibrationPoints: Array<{ x: number; y: number }>;
   past: SceneHistoryFrame[];
@@ -39,6 +41,7 @@ export interface SceneState {
   setCameraConfig: (config: Partial<CameraConfig>) => void;
   addItem: (item3dId: string) => void;
   removeItem: (id: string) => void;
+  duplicateItem: (id: string) => void;
   selectItem: (id: string | null) => void;
   setActiveTool: (tool: 'select' | 'move' | 'rotate' | 'scale' | 'calibrate') => void;
   updateItemTransform: (
@@ -52,6 +55,7 @@ export interface SceneState {
   assignMaterial: (itemId: string, partName: string, materialId: string) => void;
   setBackgroundPhoto: (url: string | null) => void;
   setIsLocked: (locked: boolean) => void;
+  setIsDraggingItem: (v: boolean) => void;
   setCalibrationPoints: (points: Array<{ x: number; y: number }>) => void;
   resetScene: () => void;
   saveToHistory: () => void;
@@ -74,9 +78,9 @@ export const useSceneState = create<SceneState>((set, get) => ({
   
   // === ROOM SHELL CONFIG ===
   roomConfig: {
-    width: 300,
-    length: 300,
-    height: 250,
+    width: 500,
+    length: 400,
+    height: 280,
     wallColor: '#f1f5f9',
     floorColor: '#e2e8f0',
     ambientIntensity: 0.6,
@@ -88,6 +92,8 @@ export const useSceneState = create<SceneState>((set, get) => ({
   // === PERSPECTIVE MATCHING STATE ===
   backgroundPhotoUrl: null,
   isLocked: false,
+  isDraggingItem: false,
+  isLoadingCatalog: false,
   cameraConfig: {
     fov: 50,
     position: [0, 2.2, 5],
@@ -115,12 +121,15 @@ export const useSceneState = create<SceneState>((set, get) => ({
   }),
 
   loadCatalog: async () => {
+    set({ isLoadingCatalog: true });
     try {
       const items = await api3d.getItems3D();
       const materials = await api3d.getMaterials3D();
       set({ itemsCatalog: items as CatalogItem[], materialsCatalog: materials as Material3D[] });
     } catch (e) {
       console.warn("Failed to load catalog from Supabase, using fallback:", e);
+    } finally {
+      set({ isLoadingCatalog: false });
     }
   },
 
@@ -292,10 +301,27 @@ export const useSceneState = create<SceneState>((set, get) => ({
         });
       }
 
+      // Auto-stagger: spawn next to last item to avoid overlap at origin
+      let spawnX = 0;
+      let spawnZ = 0;
+      if (state.placedItems.length > 0) {
+        const lastItem = state.placedItems[state.placedItems.length - 1];
+        const lastCatalog = state.itemsCatalog.find(i => i.id === lastItem.item3dId);
+        const lastW = lastCatalog ? (lastCatalog.default_width * lastItem.scale[0]) / 100 : 0.6;
+        const newW = catalogItem.default_width / 100;
+        spawnX = lastItem.position[0] + lastW / 2 + newW / 2 + 0.05;
+        spawnZ = lastItem.position[2];
+        // Wrap to next row if item goes too far right (> 2.5m)
+        if (Math.abs(spawnX) > 2.5) {
+          spawnX = 0;
+          spawnZ = lastItem.position[2] - 0.8;
+        }
+      }
+
       const newItem: PlacedItem = {
         id: `placed-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
         item3dId,
-        position: [0, 0, 0],
+        position: [spawnX, 0, spawnZ],
         rotationY: 0,
         scale: [1, 1, 1],
         materialAssignments,
@@ -304,6 +330,25 @@ export const useSceneState = create<SceneState>((set, get) => ({
       return {
         placedItems: [...state.placedItems, newItem],
         selectedItemId: newItem.id
+      };
+    });
+  },
+
+  duplicateItem: (id) => {
+    get().saveToHistory();
+    set((state) => {
+      const item = state.placedItems.find(i => i.id === id);
+      if (!item) return {};
+      const catalogItem = state.itemsCatalog.find(i => i.id === item.item3dId);
+      const itemW = catalogItem ? (catalogItem.default_width * item.scale[0]) / 100 : 0.6;
+      const newItem: PlacedItem = {
+        ...item,
+        id: `placed-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+        position: [item.position[0] + itemW + 0.05, item.position[1], item.position[2]],
+      };
+      return {
+        placedItems: [...state.placedItems, newItem],
+        selectedItemId: newItem.id,
       };
     });
   },
@@ -378,6 +423,8 @@ export const useSceneState = create<SceneState>((set, get) => ({
   setBackgroundPhoto: (url) => set({ backgroundPhotoUrl: url }),
 
   setIsLocked: (locked) => set({ isLocked: locked }),
+
+  setIsDraggingItem: (v) => set({ isDraggingItem: v }),
 
   setCalibrationPoints: (points) => set({ calibrationPoints: points }),
 

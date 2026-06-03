@@ -214,7 +214,7 @@ export async function generateQuotationPDF({ config, metadata, estimatedPrice, c
         doc.setPage(i);
         doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
-        doc.text('Afandi Interior - Workshop: Jl. Raya Bogor KM 42, Depan GOR Pakansari', 105, 285, { align: 'center' });
+        doc.text('Afandi Interior - Workshop: Dermayu, Bumiharjo, Kec. Keling, Jepara, Jawa Tengah 59454', 105, 285, { align: 'center' });
         doc.text(`Halaman ${i} dari ${pageCount}`, 105, 290, { align: 'center' });
     }
 
@@ -342,7 +342,7 @@ export async function generate3DQuotationPDF({ bom, customer }: Quotation3DPDFPa
         doc.setPage(i);
         doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
-        doc.text('Afandi Interior - Workshop: Jl. Raya Bogor KM 42, Depan GOR Pakansari', 105, 285, { align: 'center' });
+        doc.text('Afandi Interior - Workshop: Dermayu, Bumiharjo, Kec. Keling, Jepara, Jawa Tengah 59454', 105, 285, { align: 'center' });
         doc.text(`Halaman ${i} dari ${pageCount}`, 105, 290, { align: 'center' });
     }
 

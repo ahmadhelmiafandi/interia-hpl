@@ -1,9 +1,56 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { useSceneState } from '../../hooks/useSceneState';
 import { Edges } from '@react-three/drei';
 import { PlacedItem } from '../../types/interior';
-import { ThreeEvent } from '@react-three/fiber';
+import { ThreeEvent, useFrame } from '@react-three/fiber';
+
+interface SelectionHighlightProps {
+  isSelected: boolean;
+}
+
+function SelectionHighlight({ isSelected }: SelectionHighlightProps) {
+  const edgesRef = useRef<any>(null);
+  const selectionAlpha = useRef(0);
+  const [active, setActive] = useState(false);
+
+  useEffect(() => {
+    if (isSelected) {
+      setActive(true);
+    }
+  }, [isSelected]);
+
+  useFrame((_, delta) => {
+    if (isSelected) {
+      selectionAlpha.current = Math.min(1, selectionAlpha.current + delta * 6);
+    } else {
+      selectionAlpha.current = Math.max(0, selectionAlpha.current - delta * 6);
+      if (selectionAlpha.current === 0 && active) {
+        setActive(false);
+      }
+    }
+
+    if (edgesRef.current && edgesRef.current.material) {
+      edgesRef.current.material.opacity = selectionAlpha.current;
+      edgesRef.current.material.transparent = true;
+      edgesRef.current.material.needsUpdate = true;
+    }
+  });
+
+  if (!active) return null;
+
+  return (
+    <Edges
+      ref={edgesRef}
+      scale={1.002}
+      threshold={15}
+      color="#14b8a6"
+      lineWidth={2.5}
+      transparent
+      opacity={0}
+    />
+  );
+}
 
 interface FurnitureItemProps {
   item: PlacedItem;
@@ -11,8 +58,26 @@ interface FurnitureItemProps {
 }
 
 export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) {
-  const { itemsCatalog, materialsCatalog, selectItem, updateItemTransform } = useSceneState();
+  const { itemsCatalog, materialsCatalog, selectItem, updateItemTransform, setIsDraggingItem } = useSceneState();
   const groupRef = useRef<THREE.Group>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // === SPAWN ANIMATION ===
+  // Starts at 0 every mount, eases to 1 with "ease-out-back" bounce
+  const spawnProgress = useRef(0);
+  useFrame((_, delta) => {
+    if (spawnProgress.current < 1) {
+      spawnProgress.current = Math.min(1, spawnProgress.current + delta * 5);
+      if (groupRef.current) {
+        const t = spawnProgress.current;
+        // Ease out back formula: bounces slightly past 1 before settling
+        const c1 = 1.70158;
+        const c3 = c1 + 1;
+        const s = 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+        groupRef.current.scale.setScalar(Math.max(0, s));
+      }
+    }
+  });
 
   const catalogItem = itemsCatalog.find(i => i.id === item.item3dId);
   if (!catalogItem) return null;
@@ -43,26 +108,39 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
     };
   };
 
+  // ─── DRAG TO MOVE (Floor-Plane Projection) ───────────────────────────────────
+  // Bug fix: sebelumnya drag menggunakan e.point dari mesh furniture (salah).
+  // Sekarang menggunakan invisible drag plane di y=0 (lantai) sehingga koordinat
+  // selalu tepat di lantai terlepas posisi mouse di atas furniture apapun.
+
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation();
     selectItem(item.id);
+    setIsDragging(true);
+    setIsDraggingItem(true); // Nonaktifkan OrbitControls selama drag
   };
 
-  // Drag-to-move implementation on floor plane (simple projection)
-  const handlePointerMove = (e: ThreeEvent<PointerEvent>) => {
-    if (!isSelected || e.buttons !== 1) return; // Only drag when selected and mouse down
+  const handleDragPlaneMove = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation();
-    
-    // Project intersection coordinate to Floor (y = 0 plane)
-    const floorIntersectPoint = e.point;
-    if (floorIntersectPoint) {
-      updateItemTransform(item.id, {
-        position: { 
-          x: Math.round(floorIntersectPoint.x * 20) / 20, // snap to 5cm grid
-          z: Math.round(floorIntersectPoint.z * 20) / 20 
-        }
-      });
+    // Jika tombol mouse sudah dilepas, hentikan drag
+    if (e.buttons !== 1) {
+      setIsDragging(false);
+      setIsDraggingItem(false);
+      return;
     }
+    // e.point sudah di world space y=0 karena plane ada di lantai
+    updateItemTransform(item.id, {
+      position: {
+        x: Math.round(e.point.x * 20) / 20, // snap ke grid 5cm
+        z: Math.round(e.point.z * 20) / 20,
+      }
+    });
+  };
+
+  const handleDragPlaneUp = (e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation();
+    setIsDragging(false);
+    setIsDraggingItem(false);
   };
 
   // ──── PROCEDURAL MODEL RENDERERS (Fallback when GLB not provided) ────
@@ -79,7 +157,7 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
         <mesh castShadow receiveShadow>
           <boxGeometry args={[w, h, d]} />
           <meshStandardMaterial {...bodyProps} />
-          {isSelected && <Edges scale={1.002} threshold={15} color="#14b8a6" lineWidth={2.5} />}
+          <SelectionHighlight isSelected={isSelected} />
         </mesh>
 
         {/* Toe kick base panel (Only for base kitchen cabinets) */}
@@ -112,7 +190,7 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
       <mesh castShadow receiveShadow>
         <boxGeometry args={[w, h, d]} />
         <meshStandardMaterial {...matProps} />
-        {isSelected && <Edges scale={1.002} threshold={15} color="#14b8a6" lineWidth={2.5} />}
+        <SelectionHighlight isSelected={isSelected} />
       </mesh>
     );
   };
@@ -129,7 +207,7 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
         <mesh castShadow receiveShadow>
           <boxGeometry args={[w, h, d]} />
           <meshStandardMaterial {...sideProps} />
-          {isSelected && <Edges scale={1.002} threshold={15} color="#14b8a6" lineWidth={2.5} />}
+          <SelectionHighlight isSelected={isSelected} />
         </mesh>
 
         {/* Left Door */}
@@ -168,7 +246,7 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
         <mesh castShadow receiveShadow>
           <boxGeometry args={[w, h, d]} />
           <meshStandardMaterial {...bodyProps} />
-          {isSelected && <Edges scale={1.002} threshold={15} color="#14b8a6" lineWidth={2.5} />}
+          <SelectionHighlight isSelected={isSelected} />
         </mesh>
 
         {/* Front Drawers */}
@@ -197,14 +275,14 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
           <mesh castShadow receiveShadow>
             <boxGeometry args={[w, h, d]} />
             <meshStandardMaterial color="#64748b" roughness={0.5} />
-            {isSelected && <Edges scale={1.002} threshold={15} color="#14b8a6" lineWidth={2.5} />}
+            <SelectionHighlight isSelected={isSelected} />
           </mesh>
         );
     }
   };
 
-  // Euler rotation calculation in world space
-  const posY = h / 2 + item.position[1]; // Make bottom of object snap to floor plane (y = 0)
+  // Bottom of object snaps to floor plane (y = 0)
+  const posY = h / 2 + item.position[1];
 
   return (
     <group
@@ -212,9 +290,27 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
       position={[item.position[0], posY, item.position[2]]}
       rotation={[0, item.rotationY, 0]}
       onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
     >
       {renderModel()}
+
+      {/*
+        INVISIBLE DRAG PLANE — Muncul hanya saat drag aktif.
+        Posisi [0, -posY, 0] dalam local space = world y=0 (lantai).
+        Ukuran 50x50m mencakup seluruh ruangan sehingga pointer tidak
+        "keluar" dari area drag meskipun cursor melewati batas furniture.
+        e.point dari plane ini selalu ada di lantai (y=0 world space).
+      */}
+      {isDragging && (
+        <mesh
+          position={[0, -posY, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          onPointerMove={handleDragPlaneMove}
+          onPointerUp={handleDragPlaneUp}
+        >
+          <planeGeometry args={[50, 50]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+        </mesh>
+      )}
     </group>
   );
 }

@@ -26,17 +26,20 @@ export default function MaterialPanel() {
     ? itemsCatalog.find(i => i.id === selectedItem.item3dId) 
     : null;
 
-  // Auto select first mesh part when selected item changes
+  // Auto select first mesh part when selected item changes.
+  // Note: activePart intentionally excluded from deps — adding it causes infinite loop
+  // because this effect calls setActivePart which would re-trigger the effect.
   useEffect(() => {
     if (catalogItem && catalogItem.mesh_parts) {
       const parts = Object.keys(catalogItem.mesh_parts);
-      if (parts.length > 0 && !parts.includes(activePart)) {
+      if (parts.length > 0) {
         setActivePart(parts[0]);
       }
     } else {
       setActivePart('');
     }
-  }, [catalogItem, activePart]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [catalogItem]);
 
   if (!selectedItemId || !selectedItem || !catalogItem) {
     return (

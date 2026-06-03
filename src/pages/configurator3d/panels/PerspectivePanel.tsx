@@ -17,6 +17,7 @@ export default function PerspectivePanel() {
   } = useSceneState();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const currentObjUrlRef = useRef<string | null>(null); // track untuk revokeObjectURL
   const [isDragging, setIsDragging] = useState(false);
   const [isSolving, setIsSolving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -38,7 +39,12 @@ export default function PerspectivePanel() {
     }
 
     setErrorMsg('');
+    // Revoke URL lama untuk mencegah memory leak
+    if (currentObjUrlRef.current) {
+      URL.revokeObjectURL(currentObjUrlRef.current);
+    }
     const localUrl = URL.createObjectURL(file);
+    currentObjUrlRef.current = localUrl;
     setBackgroundPhoto(localUrl);
     setActiveTool('calibrate'); // Auto open calibration grid upon upload
   };
@@ -97,6 +103,11 @@ export default function PerspectivePanel() {
   };
 
   const handleRemovePhoto = () => {
+    // Revoke object URL saat foto dihapus untuk bebas memory
+    if (currentObjUrlRef.current) {
+      URL.revokeObjectURL(currentObjUrlRef.current);
+      currentObjUrlRef.current = null;
+    }
     setBackgroundPhoto(null);
     setIsLocked(false);
     setActiveTool('select');
