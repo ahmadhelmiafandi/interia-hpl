@@ -219,7 +219,7 @@ export function Contact({ cmsData }: ContactProps) {
                                 <img src="/brand/logo-icon-dark.png" alt="Icon" className="w-8 h-8 object-contain drop-shadow-sm" />
                                 <div>
                                     <h5 className="font-bold text-slate-900 leading-none">Afandi Interior Workshop</h5>
-                                    <p className="text-[10px] text-slate-500">Bogor, Jawa Barat</p>
+                                    <p className="text-[10px] text-slate-500">Jepara, Jawa Tengah</p>
                                 </div>
                             </div>
                             <div className="text-xs text-slate-600 border-t border-slate-100 pt-2 flex items-center gap-1 font-bold">
@@ -229,7 +229,7 @@ export function Contact({ cmsData }: ContactProps) {
                         </div>
                         <div className="w-full h-80 bg-slate-700 rounded-2xl overflow-hidden relative">
                             <iframe 
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3963.9575971481667!2d106.8273!3d-6.4831!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69c148e65e64d5%3A0x6b29d4d98a0026e6!2sStadion%20Pakansari!5e0!3m2!1sid!2sid!4v1780306784042!5m2!1sid!2sid" 
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d442.94821240468525!2d110.83739174259163!3d-6.472642271122013!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7124cca95fb529%3A0xbb7fcdc31e37790d!2sGRGQ%2BX39%2C%20Dermayu%2C%20Bumiharjo%2C%20Kec.%20Keling%2C%20Kabupaten%20Jepara%2C%20Jawa%20Tengah%2059454!5e0!3m2!1sid!2sid!4v1780306784042!5m2!1sid!2sid" 
                                 width="100%" 
                                 height="100%" 
                                 style={{ border: 0 }} 

@@ -318,6 +318,14 @@ export const useSceneState = create<SceneState>((set, get) => ({
         }
       }
 
+      // Clamp spawn position to room walls
+      const roomW = (state.roomConfig.width || 300) / 100;
+      const roomL = (state.roomConfig.length || 300) / 100;
+      const halfW = (catalogItem.default_width / 100) / 2;
+      const halfD = (catalogItem.default_depth / 100) / 2;
+      spawnX = Math.max(-roomW / 2 + halfW, Math.min(roomW / 2 - halfW, spawnX));
+      spawnZ = Math.max(-roomL / 2 + halfD, Math.min(roomL / 2 - halfD, spawnZ));
+
       const newItem: PlacedItem = {
         id: `placed-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
         item3dId,
@@ -341,10 +349,18 @@ export const useSceneState = create<SceneState>((set, get) => ({
       if (!item) return {};
       const catalogItem = state.itemsCatalog.find(i => i.id === item.item3dId);
       const itemW = catalogItem ? (catalogItem.default_width * item.scale[0]) / 100 : 0.6;
+      let dupX = item.position[0] + itemW + 0.05;
+      // Clamp duplicate position to room walls
+      const roomW = (state.roomConfig.width || 300) / 100;
+      const roomL = (state.roomConfig.length || 300) / 100;
+      const halfExtX = itemW / 2;
+      const halfExtZ = catalogItem ? (catalogItem.default_depth * item.scale[2]) / 200 : 0.3;
+      dupX = Math.max(-roomW / 2 + halfExtX, Math.min(roomW / 2 - halfExtX, dupX));
+      const dupZ = Math.max(-roomL / 2 + halfExtZ, Math.min(roomL / 2 - halfExtZ, item.position[2]));
       const newItem: PlacedItem = {
         ...item,
         id: `placed-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-        position: [item.position[0] + itemW + 0.05, item.position[1], item.position[2]],
+        position: [dupX, item.position[1], dupZ],
       };
       return {
         placedItems: [...state.placedItems, newItem],
@@ -395,10 +411,31 @@ export const useSceneState = create<SceneState>((set, get) => ({
         }
       }
 
+      const nextRotY = updates.rotationY !== undefined ? updates.rotationY : item.rotationY;
+
+      // ── WALL COLLISION CLAMPING ("mentok tembok") ──
+      const catalogItem = state.itemsCatalog.find(ci => ci.id === item.item3dId);
+      if (catalogItem) {
+        const roomW = (state.roomConfig.width || 300) / 100;
+        const roomL = (state.roomConfig.length || 300) / 100;
+
+        const fw = (catalogItem.default_width * nextScale[0]) / 100;
+        const fd = (catalogItem.default_depth * nextScale[2]) / 100;
+
+        // Rotated AABB half-extents
+        const cos = Math.abs(Math.cos(nextRotY));
+        const sin = Math.abs(Math.sin(nextRotY));
+        const halfExtX = (fw * cos + fd * sin) / 2;
+        const halfExtZ = (fw * sin + fd * cos) / 2;
+
+        nextPos[0] = Math.max(-roomW / 2 + halfExtX, Math.min(roomW / 2 - halfExtX, nextPos[0]));
+        nextPos[2] = Math.max(-roomL / 2 + halfExtZ, Math.min(roomL / 2 - halfExtZ, nextPos[2]));
+      }
+
       return {
         ...item,
         position: nextPos,
-        rotationY: updates.rotationY !== undefined ? updates.rotationY : item.rotationY,
+        rotationY: nextRotY,
         scale: nextScale
       };
     })

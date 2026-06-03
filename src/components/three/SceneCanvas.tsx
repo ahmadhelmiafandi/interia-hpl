@@ -1,6 +1,6 @@
 import React, { Suspense, useMemo, useEffect, useRef } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import { OrbitControls, Environment, Grid, PerspectiveCamera, OrthographicCamera } from '@react-three/drei';
+import { OrbitControls, Environment, Grid, PerspectiveCamera, OrthographicCamera, ContactShadows } from '@react-three/drei';
 import { useSceneState } from '../../hooks/useSceneState';
 import FurnitureItem from './FurnitureItem';
 import { CanvasTexture, RepeatWrapping } from 'three';
@@ -242,11 +242,69 @@ function RoomShell() {
             <planeGeometry args={[w, h]} />
             <meshStandardMaterial color={roomConfig.wallColor || '#f8fafc'} roughness={0.9} />
           </mesh>
+
+          {/* Door on the Back Wall (Right Side) */}
+          {(() => {
+            const doorX = w / 2 - 0.65;
+            const doorZ = -l / 2 + 0.015;
+            return (
+              <group position={[doorX, 0, doorZ]}>
+                {/* Left Frame Post */}
+                <mesh position={[-0.45, 1.0, 0]} castShadow>
+                  <boxGeometry args={[0.04, 2.0, 0.03]} />
+                  <meshStandardMaterial color="#e2e8f0" roughness={0.8} />
+                </mesh>
+                {/* Right Frame Post */}
+                <mesh position={[0.45, 1.0, 0]} castShadow>
+                  <boxGeometry args={[0.04, 2.0, 0.03]} />
+                  <meshStandardMaterial color="#e2e8f0" roughness={0.8} />
+                </mesh>
+                {/* Top Frame Header */}
+                <mesh position={[0, 2.0, 0]} castShadow>
+                  <boxGeometry args={[0.94, 0.04, 0.03]} />
+                  <meshStandardMaterial color="#e2e8f0" roughness={0.8} />
+                </mesh>
+                {/* Door Panel */}
+                <mesh position={[0, 0.98, -0.005]} castShadow>
+                  <boxGeometry args={[0.86, 1.96, 0.025]} />
+                  <meshStandardMaterial color="#ffffff" roughness={0.65} />
+                </mesh>
+                {/* Door Handle */}
+                <mesh position={[-0.32, 1.0, 0.02]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+                  <cylinderGeometry args={[0.012, 0.012, 0.06]} />
+                  <meshStandardMaterial color="#cbd5e1" metalness={0.9} roughness={0.1} />
+                </mesh>
+              </group>
+            );
+          })()}
+
           {/* Left Wall */}
           <mesh position={[-w / 2, h / 2, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow castShadow>
             <planeGeometry args={[l, h]} />
             <meshStandardMaterial color={roomConfig.wallColor || '#f1f5f9'} roughness={0.9} />
           </mesh>
+
+          {/* Row of 4 Window Frames on Left Wall */}
+          {[-0.3, -0.1, 0.1, 0.3].map((offsetMultiplier, idx) => {
+            const winZ = offsetMultiplier * l;
+            const winX = -w / 2 + 0.015;
+            const winY = 1.35;
+            return (
+              <group key={idx} position={[winX, winY, winZ]} rotation={[0, Math.PI / 2, 0]}>
+                {/* Frame */}
+                <mesh castShadow>
+                  <boxGeometry args={[0.45, 1.2, 0.025]} />
+                  <meshStandardMaterial color="#e2e8f0" roughness={0.8} />
+                </mesh>
+                {/* Glass */}
+                <mesh position={[0, 0, -0.005]}>
+                  <planeGeometry args={[0.39, 1.14]} />
+                  <meshStandardMaterial color="#ffffff" roughness={0.05} metalness={0.95} />
+                </mesh>
+              </group>
+            );
+          })}
+
           {/* Right Wall */}
           <mesh position={[w / 2, h / 2, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow castShadow>
             <planeGeometry args={[l, h]} />
@@ -280,7 +338,7 @@ export default function SceneCanvas() {
   const l = (roomConfig.length || 300) / 100;
 
   return (
-    <div className="relative w-full h-full bg-[#F0F2F5] overflow-hidden select-none">
+    <div className="relative w-full h-full bg-[#f8fafc] overflow-hidden select-none">
       {/* Background Room Photo (HTML layer behind transparent canvas) */}
       {backgroundPhotoUrl && (
         <img
@@ -354,6 +412,15 @@ export default function SceneCanvas() {
             {/* Floor, ceiling & walls */}
             <RoomShell />
             
+            {/* Soft realistic contact shadows under furniture */}
+            <ContactShadows 
+              position={[0, 0.005, 0]}
+              opacity={0.65}
+              scale={12}
+              blur={2.2}
+              far={1.5}
+            />
+            
             {/* Render 3D list items */}
             {placedItems.map((item) => (
               <FurnitureItem 
@@ -371,11 +438,11 @@ export default function SceneCanvas() {
               position={[0, -0.001, 0]}
               args={[10.5, 10.5]}
               cellSize={0.2}
-              cellThickness={0.5}
-              cellColor="#cbd5e1"
+              cellThickness={0.35}
+              cellColor="#e2e8f0"
               sectionSize={1}
-              sectionThickness={1.2}
-              sectionColor="#94a3b8"
+              sectionThickness={0.7}
+              sectionColor="#cbd5e1"
               fadeDistance={25}
               fadeStrength={1}
               infiniteGrid

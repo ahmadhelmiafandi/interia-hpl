@@ -192,7 +192,7 @@ export default function BOMPanel({ onCheckout }: { onCheckout?: () => void }) {
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Alamat Lokasi</label>
                 <textarea
-                  placeholder="Contoh: Perumahan Indah C3, Cibinong, Bogor"
+                  placeholder="Contoh: Jl. Raya Keling No. 12, Bumiharjo, Jepara"
                   value={customer.address}
                   onChange={(e) => setCustomer({ ...customer, address: e.target.value })}
                   rows={2}

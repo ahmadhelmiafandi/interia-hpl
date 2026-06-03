@@ -52,13 +52,69 @@ function SelectionHighlight({ isSelected }: SelectionHighlightProps) {
   );
 }
 
+const textureCache: Record<string, THREE.CanvasTexture> = {};
+
+function darkenColor(hex: string, percent: number) {
+  let num = parseInt(hex.replace("#",""), 16),
+      amt = Math.round(2.55 * percent * 100),
+      R = (num >> 16) - amt,
+      G = (num >> 8 & 0x00FF) - amt,
+      B = (num & 0x0000FF) - amt;
+  return "#" + (0x1000000 + (R<0?0:R>255?255:R)*0x10000 + (G<0?0:G>255?255:G)*0x100 + (B<0?0:B>255?255:B)).toString(16).slice(1);
+}
+
+function getProceduralHplTexture(material: any) {
+  if (!material) return null;
+  const cacheKey = `${material.id}-${material.color_hex}`;
+  if (textureCache[cacheKey]) return textureCache[cacheKey];
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  const baseColor = material.color_hex || '#e8d5b7';
+  ctx.fillStyle = baseColor;
+  ctx.fillRect(0, 0, 256, 256);
+
+  if (material.category === 'wood') {
+    // Draw wood grain lines
+    ctx.strokeStyle = darkenColor(baseColor, 0.12);
+    ctx.lineWidth = 1.2;
+    for (let y = 0; y < 256; y += 6) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      for (let x = 0; x <= 256; x += 8) {
+        const wave = Math.sin(x * 0.04 + y * 0.05) * 2.5;
+        ctx.lineTo(x, y + wave);
+      }
+      ctx.stroke();
+    }
+  } else if (material.category === 'stone') {
+    // Concrete noise/marble vein styling
+    ctx.fillStyle = darkenColor(baseColor, 0.08);
+    for (let i = 0; i < 800; i++) {
+      const x = Math.random() * 256;
+      const y = Math.random() * 256;
+      ctx.fillRect(x, y, 1.5, 1.5);
+    }
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  textureCache[cacheKey] = texture;
+  return texture;
+}
+
 interface FurnitureItemProps {
   item: PlacedItem;
   isSelected: boolean;
 }
 
 export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) {
-  const { itemsCatalog, materialsCatalog, selectItem, updateItemTransform, setIsDraggingItem } = useSceneState();
+  const { itemsCatalog, materialsCatalog, selectItem, updateItemTransform, setIsDraggingItem, roomConfig } = useSceneState();
   const groupRef = useRef<THREE.Group>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -93,10 +149,12 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
     const material = materialsCatalog.find(m => m.id === matId);
     
     if (material) {
+      const tex = getProceduralHplTexture(material);
       return {
         color: material.color_hex || '#e8d5b7',
         roughness: material.roughness !== undefined ? Number(material.roughness) : 0.7,
         metalness: material.metalness !== undefined ? Number(material.metalness) : 0.05,
+        map: tex || undefined
       };
     }
     
@@ -108,10 +166,33 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
     };
   };
 
-  // ─── DRAG TO MOVE (Floor-Plane Projection) ───────────────────────────────────
-  // Bug fix: sebelumnya drag menggunakan e.point dari mesh furniture (salah).
-  // Sekarang menggunakan invisible drag plane di y=0 (lantai) sehingga koordinat
-  // selalu tepat di lantai terlepas posisi mouse di atas furniture apapun.
+  // ─── DRAG TO MOVE (Floor-Plane Projection + Wall Collision) ───────────────────
+  // Menggunakan invisible drag plane di y=0 (lantai).
+  // Posisi di-clamp agar furniture tidak menembus tembok (efek "mentok tembok").
+
+  // Hitung batas ruangan dalam meter (room origin di center)
+  const roomW = (roomConfig.width || 300) / 100; // lebar ruangan (meter)
+  const roomL = (roomConfig.length || 300) / 100; // panjang ruangan (meter)
+
+  // Hitung half-extents furniture, memperhitungkan rotasi
+  const clampPosition = (rawX: number, rawZ: number) => {
+    const cos = Math.abs(Math.cos(item.rotationY));
+    const sin = Math.abs(Math.sin(item.rotationY));
+    // Rotated bounding box half-extents
+    const halfExtX = (w * cos + d * sin) / 2;
+    const halfExtZ = (w * sin + d * cos) / 2;
+
+    // Batas minimum/maksimum agar bounding box tidak keluar tembok
+    const minX = -roomW / 2 + halfExtX;
+    const maxX = roomW / 2 - halfExtX;
+    const minZ = -roomL / 2 + halfExtZ;
+    const maxZ = roomL / 2 - halfExtZ;
+
+    return {
+      x: Math.max(minX, Math.min(maxX, rawX)),
+      z: Math.max(minZ, Math.min(maxZ, rawZ)),
+    };
+  };
 
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation();
@@ -128,12 +209,13 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
       setIsDraggingItem(false);
       return;
     }
-    // e.point sudah di world space y=0 karena plane ada di lantai
+    // Snap ke grid 5cm lalu clamp ke batas tembok
+    const snappedX = Math.round(e.point.x * 20) / 20;
+    const snappedZ = Math.round(e.point.z * 20) / 20;
+    const clamped = clampPosition(snappedX, snappedZ);
+
     updateItemTransform(item.id, {
-      position: {
-        x: Math.round(e.point.x * 20) / 20, // snap ke grid 5cm
-        z: Math.round(e.point.z * 20) / 20,
-      }
+      position: { x: clamped.x, z: clamped.z }
     });
   };
 
