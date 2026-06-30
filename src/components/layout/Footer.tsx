@@ -50,8 +50,14 @@ export default function Footer({ cmsData }: FooterProps) {
                             </a>
                         )}
                         {contactData?.tiktok && (
-                            <a href={contactData.tiktok} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700 hover:text-white transition-all shadow-md">
-                                <span className="font-bold text-lg leading-none" style={{ fontFamily: 'sans-serif' }}>&tau;</span>
+                            <a href={contactData.tiktok} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700 hover:text-white transition-all shadow-md group">
+                                <svg 
+                                    className="w-[18px] h-[18px] fill-current text-slate-300 group-hover:text-white transition-colors" 
+                                    viewBox="0 0 24 24" 
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 2.25-.8 4.54-2.19 6.27-1.55 1.94-3.8 3.09-6.22 3.33-2.42.23-4.88-.34-6.84-1.74-2.02-1.42-3.32-3.69-3.63-6.13-.3-2.46.3-5.01 1.69-7.06 1.4-2.06 3.63-3.4 6.08-3.72 1.13-.15 2.28-.15 3.41-.01v3.98c-.76-.11-1.55-.13-2.31-.02-1.22.18-2.37.83-3.13 1.83-.75.98-1.07 2.24-.92 3.48.15 1.25.79 2.39 1.77 3.16.97.77 2.22 1.09 3.45.92 1.23-.17 2.36-.8 3.12-1.8.76-.99 1.08-2.25.92-3.49-.03-3.46-.01-6.91-.01-10.37z"/>
+                                </svg>
                             </a>
                         )}
                     </div>
