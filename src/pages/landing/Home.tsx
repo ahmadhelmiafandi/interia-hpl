@@ -42,7 +42,7 @@ export default function Home() {
         <Services cmsData={settings.services} />
         <Products cmsData={settings.products} />
         <HowItWorks cmsData={settings.howItWorks} />
-        <Portfolio cmsData={settings.portfolio} />
+        <Portfolio cmsData={settings.portfolio} contactData={settings.contact} />
         <Technology cmsData={settings.tech} />
         <Team cmsData={settings.team} />
         <Testimonials cmsData={settings.testimonials} />

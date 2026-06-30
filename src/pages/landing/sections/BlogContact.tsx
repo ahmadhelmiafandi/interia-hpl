@@ -7,6 +7,8 @@ import {
   X,
   Clock,
   Calendar,
+  Instagram,
+  Facebook
 } from "lucide-react";
 
 interface BlogProps {
@@ -283,14 +285,41 @@ export function Contact({ cmsData }: ContactProps) {
             </div>
           </div>
 
-          <a
-            href={`https://wa.me/${cmsData.phone.replace(/[^0-9]/g, "")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 mt-8 px-8 py-4 bg-teal-500 hover:bg-teal-600 text-slate-900 rounded-xl font-bold shadow-lg shadow-teal-500/20 transition-all hover:-translate-y-1 w-full max-w-xs justify-center uppercase tracking-wider text-sm"
-          >
-            Chat WhatsApp
-          </a>
+          <div className="flex flex-col sm:flex-row gap-4 mt-8 w-full max-w-md">
+            <a
+              href={`https://wa.me/${cmsData.phone.replace(/[^0-9]/g, "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-3 px-8 py-4 bg-teal-500 hover:bg-teal-600 text-slate-900 rounded-xl font-bold shadow-lg shadow-teal-500/20 transition-all hover:-translate-y-1 uppercase tracking-wider text-sm"
+            >
+              Chat WhatsApp
+            </a>
+
+            <div className="flex gap-4">
+              {cmsData.instagram && (
+                <a
+                  href={cmsData.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-shrink-0 w-14 h-14 bg-slate-800 rounded-xl flex items-center justify-center hover:bg-gradient-to-tr hover:from-amber-400 hover:via-rose-500 hover:to-fuchsia-600 text-slate-400 hover:text-white transition-all shadow-lg hover:-translate-y-1"
+                  title="Instagram"
+                >
+                  <Instagram size={24} />
+                </a>
+              )}
+              {cmsData.facebook && (
+                <a
+                  href={cmsData.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-shrink-0 w-14 h-14 bg-slate-800 rounded-xl flex items-center justify-center hover:bg-blue-600 text-slate-400 hover:text-white transition-all shadow-lg hover:-translate-y-1"
+                  title="Facebook"
+                >
+                  <Facebook size={24} />
+                </a>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="flex-1 w-full">

@@ -81,7 +81,7 @@ export function HowItWorks({ cmsData }: SectionProps) {
     );
 }
 
-export function Portfolio({ cmsData }: SectionProps) {
+export function Portfolio({ cmsData, contactData }: SectionProps & { contactData?: any }) {
     const [selectedItem, setSelectedItem] = useState<PortfolioItem | null>(null);
 
     const defaultWorks = [
@@ -108,10 +108,10 @@ export function Portfolio({ cmsData }: SectionProps) {
                         <p className="text-slate-500 text-lg font-light max-w-md italic">"Setiap sudut ruangan memiliki cerita, dan kami di sini untuk menulisnya bersama Anda."</p>
                     </div>
                     <a 
-                        href="https://instagram.com/afandi_interior" 
+                        href={contactData?.instagram || "https://instagram.com/afandi_interior"} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="group flex items-center justify-center gap-3 px-8 py-4 bg-white border-2 border-slate-900 text-slate-900 rounded-full font-black transition-all hover:bg-slate-900 hover:text-white active:scale-95 text-xs uppercase tracking-widest shadow-xl shadow-slate-200 w-full md:w-auto"
+                        className="flex items-center gap-2 px-6 py-3 bg-white text-slate-800 rounded-full font-bold hover:shadow-lg hover:-translate-y-1 transition-all group"
                     >
                         <span>Eksplorasi di Instagram</span>
                         <Instagram size={18} className="group-hover:scale-110 transition-transform" />
@@ -215,10 +215,10 @@ export function Portfolio({ cmsData }: SectionProps) {
 
                             <div className="pt-10">
                                 <a 
-                                    href={`https://wa.me/628123456789?text=Halo Afandi Interior, saya menyukai proyek: ${selectedItem.title}. Boleh tanya estimasi harganya?`}
+                                    href={`https://wa.me/${contactData?.phone?.replace(/[^0-9]/g, "") || "628123456789"}?text=Halo Afandi Interior, saya menyukai proyek: ${selectedItem.title}. Boleh tanya estimasi harganya?`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-teal-600 transition-all shadow-xl active:scale-[0.98]"
+                                    className="flex-1 px-4 py-3 bg-teal-600 text-white rounded-xl font-bold flex justify-center items-center gap-2 hover:bg-teal-700 transition-colors shadow-lg shadow-teal-500/20 active:scale-95"
                                 >
                                     Konsultasi Desain Ini
                                 </a>
