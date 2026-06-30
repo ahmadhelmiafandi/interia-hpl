@@ -34,19 +34,6 @@ export default function GridCalibration() {
     };
   }, []);
 
-  if (activeTool !== 'calibrate') return null;
-
-  // Convert normalized coordinate [0..1] to pixel coordinate
-  const toPixels = (point: Point2D) => ({
-    x: point.x * dimensions.width,
-    y: point.y * dimensions.height,
-  });
-
-  const p0 = toPixels(calibrationPoints[0]); // Bottom-Left
-  const p1 = toPixels(calibrationPoints[1]); // Bottom-Right
-  const p2 = toPixels(calibrationPoints[2]); // Top-Right
-  const p3 = toPixels(calibrationPoints[3]); // Top-Left
-
   // Dragging event handlers
   const handleStartDrag = (index: number, e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
@@ -102,6 +89,20 @@ export default function GridCalibration() {
       window.removeEventListener('touchend', handleStop);
     };
   }, [activeHandle, calibrationPoints, setCalibrationPoints]);
+
+  if (activeTool !== 'calibrate') return null;
+
+  // Convert normalized coordinate [0..1] to pixel coordinate
+  const toPixels = (point: Point2D) => ({
+    x: point.x * dimensions.width,
+    y: point.y * dimensions.height,
+  });
+
+  const p0 = toPixels(calibrationPoints[0]); // Bottom-Left
+  const p1 = toPixels(calibrationPoints[1]); // Bottom-Right
+  const p2 = toPixels(calibrationPoints[2]); // Top-Right
+  const p3 = toPixels(calibrationPoints[3]); // Top-Left
+
 
   // Generate subdivisions for visual perspective grid (3x3 grid lines)
   const getGridLines = () => {

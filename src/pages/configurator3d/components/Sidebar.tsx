@@ -1,12 +1,12 @@
-import React from 'react';
+import React from "react";
 import {
   Layers,
   Paintbrush,
   Lightbulb,
   Sparkles,
   Camera,
-  Calculator
-} from 'lucide-react';
+  Calculator,
+} from "lucide-react";
 
 interface SidebarProps {
   activeTab: string;
@@ -16,40 +16,40 @@ interface SidebarProps {
 export default function Sidebar({ activeTab, onChangeTab }: SidebarProps) {
   const sidebarItems = [
     {
-      id: 'presets',
-      label: 'Ruang Preset',
+      id: "presets",
+      label: "Ruang Preset",
       icon: <Sparkles className="w-5 h-5" />,
-      desc: 'Muat tata letak ruangan instan (Kitchen, Wardrobe, TV Rack)',
+      desc: "Muat tata letak ruangan instan (Kitchen, Wardrobe, TV Rack)",
     },
     {
-      id: 'furniture',
-      label: 'Katalog 3D',
+      id: "furniture",
+      label: "Katalog 3D",
       icon: <Layers className="w-5 h-5" />,
-      desc: 'Tambahkan unit kabinet, lemari, rak, atau countertop',
+      desc: "Tambahkan unit kabinet, lemari, rak, atau countertop",
     },
     {
-      id: 'materials',
-      label: 'Dinding & Lantai',
+      id: "materials",
+      label: "Dinding & Lantai",
       icon: <Paintbrush className="w-5 h-5" />,
-      desc: 'Pilih tipe ubin lantai (Kayu, Marmer) & cat dinding',
+      desc: "Pilih tipe ubin lantai (Kayu, Marmer) & cat dinding",
     },
     {
-      id: 'lighting',
-      label: 'Pencahayaan',
+      id: "lighting",
+      label: "Pencahayaan",
       icon: <Lightbulb className="w-5 h-5" />,
-      desc: 'Atur intensitas cahaya matahari, bayangan, & ambient',
+      desc: "Atur intensitas cahaya matahari, bayangan, & ambient",
     },
     {
-      id: 'perspective',
-      label: 'Foto Room',
+      id: "perspective",
+      label: "Foto Room",
       icon: <Camera className="w-5 h-5" />,
-      desc: 'Upload foto latar belakang ruangan & kalibrasi perspektif',
+      desc: "Fitur ini sedang dalam pengembangan — coming soon.",
     },
     {
-      id: 'bom',
-      label: 'Estimasi BOM',
+      id: "bom",
+      label: "Estimasi BOM",
       icon: <Calculator className="w-5 h-5" />,
-      desc: 'Lihat rincian anggaran biaya & ekspor PDF penawaran',
+      desc: "Lihat rincian anggaran biaya & ekspor PDF penawaran",
     },
   ];
 
@@ -61,7 +61,9 @@ export default function Sidebar({ activeTab, onChangeTab }: SidebarProps) {
           {/* Brand Icon launcher */}
           <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center shadow-md mb-6 transform hover:scale-105 transition-transform">
             <div className="relative w-6 h-6 flex items-center justify-center">
-              <span className="text-white font-mono font-black text-xs">AI</span>
+              <span className="text-white font-mono font-black text-xs">
+                AI
+              </span>
               <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full animate-pulse"></span>
             </div>
           </div>
@@ -81,19 +83,21 @@ export default function Sidebar({ activeTab, onChangeTab }: SidebarProps) {
                   title={item.label}
                   className={`relative group w-full flex flex-col items-center justify-center py-3 rounded-xl transition-all duration-200 ${
                     isSelected
-                      ? 'bg-gray-900 text-white shadow-sm'
-                      : 'text-gray-400 hover:text-gray-900 hover:bg-gray-50'
+                      ? "bg-gray-900 text-white shadow-sm"
+                      : "text-gray-400 hover:text-gray-900 hover:bg-gray-50"
                   }`}
                 >
                   {item.icon}
                   <span className="text-[10px] sm:text-[11px] font-medium tracking-tight mt-1.5 hidden sm:block font-sans">
-                    {item.label.split(' ')[0]}
+                    {item.label.split(" ")[0]}
                   </span>
 
                   {/* Floating tooltip hover popup */}
                   <div className="absolute left-full ml-3 px-3 py-2 bg-gray-900 text-white rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-150 text-xs w-48 shadow-lg whitespace-normal leading-relaxed z-40">
                     <p className="font-semibold text-white">{item.label}</p>
-                    <p className="text-gray-300 text-[10px] mt-0.5">{item.desc}</p>
+                    <p className="text-gray-300 text-[10px] mt-0.5">
+                      {item.desc}
+                    </p>
                   </div>
                 </button>
               );
@@ -122,17 +126,19 @@ export default function Sidebar({ activeTab, onChangeTab }: SidebarProps) {
               onClick={() => onChangeTab(item.id)}
               className={`flex-1 flex flex-col items-center justify-center py-1 h-full transition-all duration-150 ${
                 isSelected
-                  ? 'text-gray-900 font-bold scale-105'
-                  : 'text-gray-400 active:scale-95'
+                  ? "text-gray-900 font-bold scale-105"
+                  : "text-gray-400 active:scale-95"
               }`}
             >
-              <div className={`p-1.5 rounded-lg transition-colors ${
-                isSelected ? 'bg-gray-900 text-white shadow-sm' : ''
-              }`}>
+              <div
+                className={`p-1.5 rounded-lg transition-colors ${
+                  isSelected ? "bg-gray-900 text-white shadow-sm" : ""
+                }`}
+              >
                 {item.icon}
               </div>
               <span className="text-[9px] font-medium tracking-tight mt-1 font-sans truncate w-full text-center px-1">
-                {item.label.split(' ')[0]}
+                {item.label.split(" ")[0]}
               </span>
             </button>
           );

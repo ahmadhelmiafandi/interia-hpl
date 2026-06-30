@@ -680,11 +680,14 @@ const fallbackMaterials: Material3D[] = [
   },
 ];
 
-// ─────────────────────────────────────────────────────────
-// API FUNCTIONS
-// ─────────────────────────────────────────────────────────
+// Set to true only if you have created the 'items_3d' and 'materials' tables in your Supabase database.
+// Otherwise, it will directly use local fallbacks to prevent 404 network errors in the console.
+const USE_SUPABASE_CATALOG = true;
 
 async function fetchWithFallback<T>(tableName: string, fallbackData: T, queryFn: () => PromiseLike<any>): Promise<T> {
+  if (!USE_SUPABASE_CATALOG) {
+    return fallbackData;
+  }
   try {
     const { data, error } = await queryFn();
     if (error) throw error;
@@ -698,6 +701,70 @@ async function fetchWithFallback<T>(tableName: string, fallbackData: T, queryFn:
 
 export const api3d = {
   // ──── Items 3D ────
+
+  getAllItems3DAdmin: async (): Promise<CatalogItem[]> => {
+    // Admin needs to see all items, including inactive ones
+    if (!USE_SUPABASE_CATALOG) return fallbackItems3D;
+    
+    try {
+      const { data, error } = await supabase
+        .from('items_3d')
+        .select('*')
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as CatalogItem[];
+    } catch (e: any) {
+      console.warn('[api3d] Failed to fetch all items for admin:', e.message);
+      return fallbackItems3D;
+    }
+  },
+
+  createItem3D: async (item: Partial<CatalogItem>): Promise<CatalogItem> => {
+    if (!USE_SUPABASE_CATALOG) throw new Error("Supabase is disabled. Cannot create item.");
+    
+    const { data, error } = await supabase
+      .from('items_3d')
+      .insert([{
+        ...item,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }])
+      .select()
+      .single();
+      
+    if (error) throw error;
+    return data as CatalogItem;
+  },
+
+  updateItem3D: async (id: string, updates: Partial<CatalogItem>): Promise<CatalogItem> => {
+    if (!USE_SUPABASE_CATALOG) throw new Error("Supabase is disabled. Cannot update item.");
+    
+    const { data, error } = await supabase
+      .from('items_3d')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+      
+    if (error) throw error;
+    return data as CatalogItem;
+  },
+
+  deleteItem3D: async (id: string): Promise<void> => {
+    if (!USE_SUPABASE_CATALOG) throw new Error("Supabase is disabled. Cannot delete item.");
+    
+    const { error } = await supabase
+      .from('items_3d')
+      .delete()
+      .eq('id', id);
+      
+    if (error) throw error;
+  },
 
   getItems3D: async (category?: string): Promise<CatalogItem[]> => {
     const fallback = category
@@ -713,6 +780,9 @@ export const api3d = {
 
   getItem3DById: async (id: string): Promise<CatalogItem | null> => {
     const fallback = fallbackItems3D.find((i) => i.id === id) || null;
+    if (!USE_SUPABASE_CATALOG) {
+      return fallback;
+    }
     try {
       const { data, error } = await supabase.from('items_3d').select('*').eq('id', id).single();
       if (error) throw error;

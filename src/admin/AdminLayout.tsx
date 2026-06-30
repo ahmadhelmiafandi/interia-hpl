@@ -163,7 +163,7 @@ const AdminLayout = () => {
                             </NavLink>
                             <NavLink to="/admin/products" className={navItemClass}>
                                 <Package size={18} />
-                                <span>Produk</span>
+                                <span>Katalog 3D</span>
                             </NavLink>
                         </div>
 

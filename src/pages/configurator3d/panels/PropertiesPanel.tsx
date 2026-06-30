@@ -9,7 +9,8 @@ export default function PropertiesPanel() {
     itemsCatalog, 
     updateItemTransform, 
     removeItem,
-    duplicateItem
+    duplicateItem,
+    roomConfig
   } = useSceneState();
 
   const selectedItem = placedItems.find(item => item.id === selectedItemId);
@@ -31,18 +32,85 @@ export default function PropertiesPanel() {
     );
   }
 
-  // Position updates
-  const handlePositionChange = (axis: 'x' | 'z', value: string) => {
+  // Collision Checking and Position Updates
+  const handlePositionChange = (axis: 'x' | 'y' | 'z', value: string) => {
+    let rawValue = Number(value);
+    
+    // Width, height, depth logic for wall collisions
+    const w = (catalogItem.default_width * selectedItem.scale[0]) / 100;
+    const h = (catalogItem.default_height * selectedItem.scale[1]) / 100;
+    const d = (catalogItem.default_depth * selectedItem.scale[2]) / 100;
+
+    // Room boundaries (fallback to 3m x 3m x 2.8m if context isn't injecting it here)
+    const roomW = (roomConfig.width || 300) / 100; 
+    const roomL = (roomConfig.length || 300) / 100;
+    const roomH = (roomConfig.height || 280) / 100;
+
+    const cos = Math.abs(Math.cos(selectedItem.rotationY));
+    const sin = Math.abs(Math.sin(selectedItem.rotationY));
+
+    const halfExtX = (w * cos + d * sin) / 2;
+    const halfExtZ = (w * sin + d * cos) / 2;
+
+    const minX = -roomW / 2 + halfExtX;
+    const maxX = roomW / 2 - halfExtX;
+    const minZ = -roomL / 2 + halfExtZ;
+    const maxZ = roomL / 2 - halfExtZ;
+
+    if (axis === 'x') {
+       rawValue = Math.max(minX, Math.min(maxX, rawValue));
+    } else if (axis === 'z') {
+       rawValue = Math.max(minZ, Math.min(maxZ, rawValue));
+    } else if (axis === 'y') {
+       const isWallItem = catalogItem.slug.includes('wall') || catalogItem.slug.includes('tv');
+       rawValue = isWallItem ? Math.max(0, Math.min(roomH - h, rawValue)) : 0;
+    }
+
     updateItemTransform(selectedItem.id, {
-      position: { [axis]: Number(value) }
+      position: { 
+        x: axis === 'x' ? rawValue : selectedItem.position[0],
+        y: axis === 'y' ? rawValue : selectedItem.position[1],
+        z: axis === 'z' ? rawValue : selectedItem.position[2]
+      }
     });
   };
 
   // Rotation Y (Euler, converted from degrees to radians)
   const handleRotationChange = (degValue: string) => {
-    const rad = (Number(degValue) * Math.PI) / 180;
+    let numDeg = Number(degValue);
+    // If user dragged to 360, treat it visually as 360 but logically as 0 rotation or 2PI
+    const rad = (numDeg * Math.PI) / 180;
+    
+    // We also need to re-clamp the current position because rotation changes bounding box extents
+    const currentX = selectedItem.position[0];
+    const currentZ = selectedItem.position[2];
+
+    const w = (catalogItem.default_width * selectedItem.scale[0]) / 100;
+    const d = (catalogItem.default_depth * selectedItem.scale[2]) / 100;
+
+    // Room boundaries
+    // Get room dimension from context fallback. Usually set globally to 300x300.
+    const roomW = (roomConfig.width || 300) / 100; 
+    const roomL = (roomConfig.length || 300) / 100;
+
+    const cos = Math.abs(Math.cos(rad));
+    const sin = Math.abs(Math.sin(rad));
+
+    const halfExtX = (w * cos + d * sin) / 2;
+    const halfExtZ = (w * sin + d * cos) / 2;
+
+    // Room boundaries based on the room size (origin 0,0,0)
+    const minX = -roomW / 2 + halfExtX;
+    const maxX = roomW / 2 - halfExtX;
+    const minZ = -roomL / 2 + halfExtZ;
+    const maxZ = roomL / 2 - halfExtZ;
+
+    const clampedX = Math.max(minX, Math.min(maxX, currentX));
+    const clampedZ = Math.max(minZ, Math.min(maxZ, currentZ));
+
     updateItemTransform(selectedItem.id, {
-      rotationY: rad
+      rotationY: rad,
+      position: { x: clampedX, z: clampedZ } // push back if rotation caused clipping
     });
   };
 
@@ -63,8 +131,11 @@ export default function PropertiesPanel() {
   };
 
   const currentWidth = Math.round(catalogItem.default_width * selectedItem.scale[0]);
-  // Normalize rotation degrees to [0, 359] to prevent slider from getting stuck at 360
-  const currentRotationDeg = ((Math.round((selectedItem.rotationY * 180) / Math.PI) % 360) + 360) % 360;
+  
+  // Normalize rotation degrees to show nicely in UI
+  let currentRotationDeg = Math.round((selectedItem.rotationY * 180) / Math.PI);
+  if (currentRotationDeg < 0) currentRotationDeg += 360;
+  if (currentRotationDeg >= 360 && currentRotationDeg % 360 === 0) currentRotationDeg = 0;
 
   const canScaleX = catalogItem.scalable_axis?.includes('x');
 
@@ -148,9 +219,9 @@ export default function PropertiesPanel() {
           <input
               type="range"
               min={0}
-              max={359}
+              max={360}
               step={15}
-              value={currentRotationDeg}
+              value={currentRotationDeg === 0 && selectedItem.rotationY > 0 ? 360 : currentRotationDeg}
               onChange={(e) => handleRotationChange(e.target.value)}
               className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-teal-400"
             />
@@ -177,9 +248,9 @@ export default function PropertiesPanel() {
               </div>
               <input
                 type="range"
-                min={-3}
-                max={3}
-                step={0.05}
+                min={-((roomConfig.width || 300) / 200)} // Setengah lebar ruangan (negatif)
+                max={(roomConfig.width || 300) / 200}  // Setengah lebar ruangan
+                step={0.01}
                 value={selectedItem.position[0]}
                 onChange={(e) => handlePositionChange('x', e.target.value)}
                 className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-teal-400"
@@ -194,14 +265,33 @@ export default function PropertiesPanel() {
               </div>
               <input
                 type="range"
-                min={-3}
-                max={3}
-                step={0.05}
+                min={-((roomConfig.length || 300) / 200)}
+                max={(roomConfig.length || 300) / 200}
+                step={0.01}
                 value={selectedItem.position[2]}
                 onChange={(e) => handlePositionChange('z', e.target.value)}
                 className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-teal-400"
               />
             </div>
+            
+            {/* Axis Y (Hanya tampil untuk wall items) */}
+            {(catalogItem.slug.includes('wall') || catalogItem.slug.includes('tv')) && (
+              <div className="space-y-1 pt-2 border-t border-slate-800/50">
+                <div className="flex justify-between text-[11px]">
+                  <span className="text-slate-400 font-semibold font-mono text-teal-400/80">Geser Y (Ketinggian Dinding):</span>
+                  <span className="text-slate-200 font-bold font-mono text-teal-400">{selectedItem.position[1].toFixed(2)}m</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={(roomConfig.height || 280) / 100} // Maksimal tinggi plafon ruangan
+                  step={0.01}
+                  value={selectedItem.position[1]}
+                  onChange={(e) => handlePositionChange('y', e.target.value)}
+                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-teal-400"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { ShoppingCart, Package, TrendingUp } from 'lucide-react';
 
+import { api3d } from '../lib/api3d';
+
 export default function AdminDashboard() {
     const [stats, setStats] = useState({ orders: 0, products: 0, revenue: 0 });
 
     useEffect(() => {
-        Promise.all([api.getOrders(), api.getProducts()]).then(([orders, products]) => {
+        Promise.all([api.getOrders(), api3d.getAllItems3DAdmin()]).then(([orders, products]) => {
             setStats({
                 orders: orders.length,
                 products: products.length,

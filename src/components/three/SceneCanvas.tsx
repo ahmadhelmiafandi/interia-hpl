@@ -18,14 +18,26 @@ function createRandom(seed = 42) {
 // Camera Manager for smooth lerp transitions on preset switch
 function CameraManager() {
   const { camera, controls } = useThree();
-  const { cameraConfig } = useSceneState();
+  const { cameraConfig, isLocked } = useSceneState();
   const animating = useRef(false);
   const lastPreset = useRef(cameraConfig.preset);
+  const lastLocked = useRef(isLocked);
 
   const targetPos = useRef(new THREE.Vector3());
   const targetLook = useRef(new THREE.Vector3());
 
   useEffect(() => {
+    if (isLocked) {
+      lastLocked.current = true;
+      return;
+    }
+
+    if (!isLocked && lastLocked.current) {
+      lastLocked.current = false;
+      // Force change by setting to a different valid preset
+      lastPreset.current = cameraConfig.preset === 'isometric' ? 'top' : 'isometric';
+    }
+
     if (cameraConfig.preset !== lastPreset.current) {
       lastPreset.current = cameraConfig.preset;
       animating.current = true;
@@ -46,9 +58,26 @@ function CameraManager() {
         targetLook.current.set(0, 0.5, 0);
       }
     }
-  }, [cameraConfig.preset]);
+  }, [cameraConfig.preset, isLocked]);
 
   useFrame((_, delta) => {
+    if (isLocked) {
+      if (cameraConfig.position && cameraConfig.rotation) {
+        camera.position.set(
+          cameraConfig.position[0],
+          cameraConfig.position[1],
+          cameraConfig.position[2]
+        );
+        camera.rotation.set(
+          cameraConfig.rotation[0],
+          cameraConfig.rotation[1],
+          cameraConfig.rotation[2],
+          'XYZ'
+        );
+      }
+      return;
+    }
+
     if (!animating.current) return;
 
     // Lerp position
@@ -73,6 +102,43 @@ function CameraManager() {
       }
     }
   });
+
+  // Handle one-time setup of camera properties upon locking
+  useEffect(() => {
+    if (isLocked && cameraConfig.position && cameraConfig.rotation) {
+      animating.current = false; // Stop active preset transition
+
+      camera.position.set(
+        cameraConfig.position[0],
+        cameraConfig.position[1],
+        cameraConfig.position[2]
+      );
+      
+      camera.rotation.set(
+        cameraConfig.rotation[0],
+        cameraConfig.rotation[1],
+        cameraConfig.rotation[2],
+        'XYZ'
+      );
+
+      if ((camera as THREE.PerspectiveCamera).isPerspectiveCamera) {
+        const persCam = camera as THREE.PerspectiveCamera;
+        persCam.fov = cameraConfig.fov || 45;
+        persCam.updateProjectionMatrix();
+      }
+
+      if (controls) {
+        const ctrl = controls as any;
+        
+        // Calculate a target 5 units in front of the camera based on rotation
+        const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+        const lookTarget = camera.position.clone().add(dir.multiplyScalar(5));
+        
+        ctrl.target.copy(lookTarget);
+        ctrl.update();
+      }
+    }
+  }, [isLocked, cameraConfig.position, cameraConfig.rotation, cameraConfig.fov, camera, controls]);
 
   return null;
 }
@@ -319,7 +385,8 @@ function RoomShell() {
 export default function SceneCanvas() {
   const { 
     placedItems, 
-    backgroundPhotoUrl, 
+    backgroundPhotoUrl,
+    photoTransform,
     isLocked, 
     isDraggingItem,
     selectedItemId, 
@@ -341,17 +408,27 @@ export default function SceneCanvas() {
     <div className="relative w-full h-full bg-[#f8fafc] overflow-hidden select-none">
       {/* Background Room Photo (HTML layer behind transparent canvas) */}
       {backgroundPhotoUrl && (
-        <img
-          src={backgroundPhotoUrl}
-          alt="Room Background"
-          className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none select-none"
-        />
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
+          <img
+            src={backgroundPhotoUrl}
+            alt="Room Background"
+            style={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              transformOrigin: 'center center',
+              transform: `translate(${photoTransform.offsetX}%, ${photoTransform.offsetY}%) scale(${photoTransform.scale})`,
+              transition: 'transform 0.05s linear',
+            }}
+          />
+        </div>
       )}
 
       {/* R3F Canvas Layer */}
       <div className="absolute inset-0 z-10 w-full h-full">
         <Canvas
-          shadows
+          shadows={{ type: THREE.PCFShadowMap }}
           gl={{ alpha: true, preserveDrawingBuffer: true, antialias: true }}
           onPointerMissed={handleCanvasPointerMissed}
         >
@@ -373,12 +450,14 @@ export default function SceneCanvas() {
           ) : (
             <PerspectiveCamera
               makeDefault
-              fov={cameraConfig.fov || 45}
+              fov={isLocked ? (cameraConfig.fov || 45) : (cameraConfig.fov || 45)}
               position={
-                cameraConfig.preset === 'top' ? [0.01, 8.5, 0] :
-                cameraConfig.preset === 'front' ? [0, 2.0, 7.5] :
-                cameraConfig.preset === 'side' ? [7.5, 2.0, 0] :
-                [5.5, 4.5, 6.5]
+                isLocked && cameraConfig.position
+                  ? cameraConfig.position
+                  : cameraConfig.preset === 'top' ? [0.01, 8.5, 0] :
+                    cameraConfig.preset === 'front' ? [0, 2.0, 7.5] :
+                    cameraConfig.preset === 'side' ? [7.5, 2.0, 0] :
+                    [5.5, 4.5, 6.5]
               }
               far={100}
               near={0.1}

@@ -1,49 +1,65 @@
-import React, { useEffect, useState } from 'react';
-import Navbar from '../../components/layout/Navbar';
-import Footer from '../../components/layout/Footer';
-import { api } from '../../lib/api';
+import React, { useEffect, useState } from "react";
+import { ChevronUp } from "lucide-react";
+import Navbar from "../../components/layout/Navbar";
+import Footer from "../../components/layout/Footer";
+import { api } from "../../lib/api";
 
 // Impor semua section
-import Hero from './sections/Hero';
-import { About, Services } from './sections/AboutServices';
-import { Products, Technology } from './sections/ProductsTech';
-import { HowItWorks, Portfolio } from './sections/ProcessPortfolio';
-import { Team, Testimonials, FAQ } from './sections/MoreInfo';
-import { Blog, Contact } from './sections/BlogContact';
-import { useScrollReveal } from '../../hooks/useScrollReveal';
+import Hero from "./sections/Hero";
+import { About, Services } from "./sections/AboutServices";
+import { Products, Technology } from "./sections/ProductsTech";
+import { HowItWorks, Portfolio } from "./sections/ProcessPortfolio";
+import { Team, Testimonials, FAQ } from "./sections/MoreInfo";
+import { Blog, Contact } from "./sections/BlogContact";
+import { useScrollReveal } from "../../hooks/useScrollReveal";
 
 export default function Home() {
-    const [settings, setSettings] = useState<Record<string, any> | null>(null);
-    useScrollReveal();
+  const [settings, setSettings] = useState<Record<string, any> | null>(null);
+  const [showTopButton, setShowTopButton] = useState(false);
+  useScrollReveal();
 
-    // Gulir ke atas saat halaman dimuat
-    useEffect(() => {
-        window.scrollTo(0, 0);
-        api.getSettings().then(setSettings);
-    }, []);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    api.getSettings().then(setSettings);
 
-    if (!settings) return null; // Or a subtle loading screen
+    const handleScroll = () => {
+      setShowTopButton(window.scrollY > 400);
+    };
 
-    return (
-        <div className="min-h-screen font-sans bg-slate-50 text-slate-800 selection:bg-indigo-500/30">
-            <Navbar cmsData={settings} />
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-            <main>
-                <Hero cmsData={settings.hero} />
-                <About cmsData={settings.about} />
-                <Services cmsData={settings.services} />
-                <Products cmsData={settings.products} />
-                <HowItWorks cmsData={settings.howItWorks} />
-                <Portfolio cmsData={settings.portfolio} />
-                <Technology cmsData={settings.tech} />
-                <Team cmsData={settings.team} />
-                <Testimonials cmsData={settings.testimonials} />
-                <FAQ cmsData={settings.faqs} />
-                <Blog cmsData={settings.articles} contactData={settings.contact} />
-                <Contact cmsData={settings.contact} />
-            </main>
+  if (!settings) return null; // Or a subtle loading screen
 
-            <Footer cmsData={settings} />
-        </div>
-    );
+  return (
+    <div className="min-h-screen font-sans bg-slate-50 text-slate-800 selection:bg-indigo-500/30">
+      <Navbar cmsData={settings} />
+
+      <main>
+        <Hero cmsData={settings.hero} />
+        <About cmsData={settings.about} />
+        <Services cmsData={settings.services} />
+        <Products cmsData={settings.products} />
+        <HowItWorks cmsData={settings.howItWorks} />
+        <Portfolio cmsData={settings.portfolio} />
+        <Technology cmsData={settings.tech} />
+        <Team cmsData={settings.team} />
+        <Testimonials cmsData={settings.testimonials} />
+        <FAQ cmsData={settings.faqs} />
+        <Blog cmsData={settings.articles} contactData={settings.contact} />
+        <Contact cmsData={settings.contact} />
+      </main>
+
+      <Footer cmsData={settings} />
+
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className={`fixed bottom-8 right-8 z-50 inline-flex items-center justify-center w-12 h-12 rounded-full bg-teal-600 text-white shadow-2xl shadow-teal-600/20 hover:bg-teal-500 transition-all duration-300 ${showTopButton ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-4 pointer-events-none"}`}
+        aria-label="Kembali ke atas"
+      >
+        <ChevronUp size={20} />
+      </button>
+    </div>
+  );
 }

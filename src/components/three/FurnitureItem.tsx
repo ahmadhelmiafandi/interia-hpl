@@ -166,16 +166,20 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
     };
   };
 
-  // ─── DRAG TO MOVE (Floor-Plane Projection + Wall Collision) ───────────────────
-  // Menggunakan invisible drag plane di y=0 (lantai).
+  // ─── DRAG TO MOVE (Floor/Wall-Plane Projection + Collision) ───────────────────
+  // Menggunakan invisible drag plane.
   // Posisi di-clamp agar furniture tidak menembus tembok (efek "mentok tembok").
 
   // Hitung batas ruangan dalam meter (room origin di center)
   const roomW = (roomConfig.width || 300) / 100; // lebar ruangan (meter)
   const roomL = (roomConfig.length || 300) / 100; // panjang ruangan (meter)
+  const roomH = (roomConfig.height || 280) / 100; // tinggi ruangan (meter)
+
+  // Cek apakah item ini dimaksudkan untuk menempel di tembok (wall cabinet, tv rack, dsb)
+  const isWallItem = catalogItem.slug.includes('wall') || catalogItem.slug.includes('tv');
 
   // Hitung half-extents furniture, memperhitungkan rotasi
-  const clampPosition = (rawX: number, rawZ: number) => {
+  const clampPosition = (rawX: number, rawY: number, rawZ: number) => {
     const cos = Math.abs(Math.cos(item.rotationY));
     const sin = Math.abs(Math.sin(item.rotationY));
     // Rotated bounding box half-extents
@@ -188,8 +192,13 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
     const minZ = -roomL / 2 + halfExtZ;
     const maxZ = roomL / 2 - halfExtZ;
 
+    // Untuk wall items, clamp sumbu Y (tinggi) juga agar tidak tembus lantai/plafon
+    const minY = 0; // Lantai
+    const maxY = roomH - h; // Plafon
+
     return {
       x: Math.max(minX, Math.min(maxX, rawX)),
+      y: isWallItem ? Math.max(minY, Math.min(maxY, rawY)) : 0, // Fallback 0 untuk floor items
       z: Math.max(minZ, Math.min(maxZ, rawZ)),
     };
   };
@@ -199,23 +208,40 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
     selectItem(item.id);
     setIsDragging(true);
     setIsDraggingItem(true); // Nonaktifkan OrbitControls selama drag
+    // Minta canvas render ulang pointer (workaround R3F drag)
+    e.target.setPointerCapture(e.pointerId);
   };
 
   const handleDragPlaneMove = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation();
+    if (!isDragging) return;
+
     // Jika tombol mouse sudah dilepas, hentikan drag
     if (e.buttons !== 1) {
       setIsDragging(false);
       setIsDraggingItem(false);
       return;
     }
+
+    // Untuk Wall Item, biarkan bisa digeser juga secara vertikal (y-axis)
+    // Titik intersect plane-nya akan menjadi acuan
+    let newY = item.position[1];
+    
+    if (isWallItem) {
+      // Offset point Y from intersect to world Y
+      // Ingat e.point adalah world coordinate dari interseksi plane drag
+      newY = e.point.y - h / 2; 
+    }
+
     // Snap ke grid 5cm lalu clamp ke batas tembok
     const snappedX = Math.round(e.point.x * 20) / 20;
+    const snappedY = isWallItem ? Math.round(newY * 20) / 20 : 0;
     const snappedZ = Math.round(e.point.z * 20) / 20;
-    const clamped = clampPosition(snappedX, snappedZ);
+
+    const clamped = clampPosition(snappedX, snappedY, snappedZ);
 
     updateItemTransform(item.id, {
-      position: { x: clamped.x, z: clamped.z }
+      position: { x: clamped.x, y: clamped.y, z: clamped.z }
     });
   };
 
@@ -223,6 +249,9 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
     e.stopPropagation();
     setIsDragging(false);
     setIsDraggingItem(false);
+    if (e.target.hasPointerCapture(e.pointerId)) {
+      e.target.releasePointerCapture(e.pointerId);
+    }
   };
 
   // ──── PROCEDURAL MODEL RENDERERS (Fallback when GLB not provided) ────
@@ -377,20 +406,19 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
 
       {/*
         INVISIBLE DRAG PLANE — Muncul hanya saat drag aktif.
-        Posisi [0, -posY, 0] dalam local space = world y=0 (lantai).
-        Ukuran 50x50m mencakup seluruh ruangan sehingga pointer tidak
-        "keluar" dari area drag meskipun cursor melewati batas furniture.
-        e.point dari plane ini selalu ada di lantai (y=0 world space).
+        Untuk floor items: Plane horizontal menghadap ke atas.
+        Untuk wall items: Plane vertikal menghadap kamera untuk memudahkan drag naik-turun.
       */}
       {isDragging && (
         <mesh
-          position={[0, -posY, 0]}
-          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, -posY + (isWallItem ? h / 2 : 0), 0]}
+          rotation={isWallItem ? [0, 0, 0] : [-Math.PI / 2, 0, 0]}
           onPointerMove={handleDragPlaneMove}
           onPointerUp={handleDragPlaneUp}
+          onPointerOut={handleDragPlaneUp}
         >
           <planeGeometry args={[50, 50]} />
-          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} side={THREE.DoubleSide} />
         </mesh>
       )}
     </group>

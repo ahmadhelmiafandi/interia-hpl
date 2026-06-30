@@ -16,6 +16,12 @@ export interface SceneHistoryFrame {
   roomConfig: RoomConfig;
 }
 
+export interface PhotoTransform {
+  offsetX: number; // -100 to 100 (percent)
+  offsetY: number; // -100 to 100 (percent)
+  scale: number;   // 1.0 to 2.5
+}
+
 export interface SceneState {
   itemsCatalog: CatalogItem[];
   materialsCatalog: Material3D[];
@@ -24,6 +30,7 @@ export interface SceneState {
   activeTool: 'select' | 'move' | 'rotate' | 'scale' | 'calibrate';
   roomConfig: RoomConfig;
   backgroundPhotoUrl: string | null;
+  photoTransform: PhotoTransform;
   isLocked: boolean;
   isDraggingItem: boolean;
   isLoadingCatalog: boolean;
@@ -54,6 +61,8 @@ export interface SceneState {
   ) => void;
   assignMaterial: (itemId: string, partName: string, materialId: string) => void;
   setBackgroundPhoto: (url: string | null) => void;
+  setPhotoTransform: (transform: Partial<PhotoTransform>) => void;
+  resetPhotoTransform: () => void;
   setIsLocked: (locked: boolean) => void;
   setIsDraggingItem: (v: boolean) => void;
   setCalibrationPoints: (points: Array<{ x: number; y: number }>) => void;
@@ -91,6 +100,7 @@ export const useSceneState = create<SceneState>((set, get) => ({
 
   // === PERSPECTIVE MATCHING STATE ===
   backgroundPhotoUrl: null,
+  photoTransform: { offsetX: 0, offsetY: 0, scale: 1.0 },
   isLocked: false,
   isDraggingItem: false,
   isLoadingCatalog: false,
@@ -418,8 +428,10 @@ export const useSceneState = create<SceneState>((set, get) => ({
       if (catalogItem) {
         const roomW = (state.roomConfig.width || 300) / 100;
         const roomL = (state.roomConfig.length || 300) / 100;
+        const roomH = (state.roomConfig.height || 280) / 100;
 
         const fw = (catalogItem.default_width * nextScale[0]) / 100;
+        const fh = (catalogItem.default_height * nextScale[1]) / 100;
         const fd = (catalogItem.default_depth * nextScale[2]) / 100;
 
         // Rotated AABB half-extents
@@ -430,6 +442,12 @@ export const useSceneState = create<SceneState>((set, get) => ({
 
         nextPos[0] = Math.max(-roomW / 2 + halfExtX, Math.min(roomW / 2 - halfExtX, nextPos[0]));
         nextPos[2] = Math.max(-roomL / 2 + halfExtZ, Math.min(roomL / 2 - halfExtZ, nextPos[2]));
+
+        // Clamp Y (tinggi) untuk item dinding agar tidak tembus plafon/lantai
+        const isWallItem = catalogItem.slug.includes('wall') || catalogItem.slug.includes('tv');
+        if (isWallItem) {
+          nextPos[1] = Math.max(0, Math.min(roomH - fh, nextPos[1]));
+        }
       }
 
       return {
@@ -457,7 +475,13 @@ export const useSceneState = create<SceneState>((set, get) => ({
     }));
   },
 
-  setBackgroundPhoto: (url) => set({ backgroundPhotoUrl: url }),
+  setBackgroundPhoto: (url) => set({ backgroundPhotoUrl: url, photoTransform: { offsetX: 0, offsetY: 0, scale: 1.0 } }),
+
+  setPhotoTransform: (transform) => set((state) => ({
+    photoTransform: { ...state.photoTransform, ...transform }
+  })),
+
+  resetPhotoTransform: () => set({ photoTransform: { offsetX: 0, offsetY: 0, scale: 1.0 } }),
 
   setIsLocked: (locked) => set({ isLocked: locked }),
 
