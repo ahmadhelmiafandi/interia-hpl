@@ -39,15 +39,17 @@ export default function Footer({ cmsData }: FooterProps) {
                         {settings?.footer?.description || 'Afandi Interior: Spesialis desain dan produksi interior premium. Kami memadukan estetika mewah dengan teknologi configurator untuk mewujudkan ruang impian Anda secara nyata dan presisi.'}
                     </p>
                     <div className="flex gap-4">
-                        <a href="#" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-md">
-                            <Instagram size={18} />
-                        </a>
-                        <a href="#" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-md">
-                            <Facebook size={18} />
-                        </a>
-                        <a href="#" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-md">
-                            <Twitter size={18} />
-                        </a>
+                        {contactData?.instagram && (
+                            <a href={contactData.instagram} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-md">
+                                <Instagram size={18} />
+                            </a>
+                        )}
+                        {contactData?.facebook && (
+                            <a href={contactData.facebook} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-md">
+                                <Facebook size={18} />
+                            </a>
+                        )}
+                        {/* Twitter disembunyikan/dihapus jika tidak ada opsi di admin */}
                     </div>
                 </div>
 
