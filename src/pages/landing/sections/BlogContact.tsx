@@ -7,8 +7,7 @@ import {
   X,
   Clock,
   Calendar,
-  Instagram,
-  Facebook,
+  Instagram
 } from "lucide-react";
 
 interface BlogProps {

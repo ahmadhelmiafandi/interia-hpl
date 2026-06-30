@@ -52,7 +52,7 @@ export default function Footer({ cmsData }: FooterProps) {
                         {contactData?.tiktok && (
                             <a href={contactData.tiktok} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700 hover:text-white transition-all shadow-md group">
                                 <svg 
-                                    className="w-[18px] h-[18px] fill-current text-slate-300 group-hover:text-white transition-colors" 
+                                    className="w-[16px] h-[16px] fill-current text-slate-300 group-hover:text-white transition-colors" 
                                     viewBox="0 0 24 24" 
                                     xmlns="http://www.w3.org/2000/svg"
                                 >
