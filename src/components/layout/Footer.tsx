@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Phone, Mail, Instagram, Facebook, Twitter } from 'lucide-react';
+import { MapPin, Phone, Mail, Instagram, Facebook } from 'lucide-react';
 
 interface FooterProps {
     cmsData?: Record<string, any>;
@@ -49,7 +49,11 @@ export default function Footer({ cmsData }: FooterProps) {
                                 <Facebook size={18} />
                             </a>
                         )}
-                        {/* Twitter disembunyikan/dihapus jika tidak ada opsi di admin */}
+                        {contactData?.tiktok && (
+                            <a href={contactData.tiktok} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700 hover:text-white transition-all shadow-md">
+                                <span className="font-bold text-lg leading-none" style={{ fontFamily: 'sans-serif' }}>&tau;</span>
+                            </a>
+                        )}
                     </div>
                 </div>
 
