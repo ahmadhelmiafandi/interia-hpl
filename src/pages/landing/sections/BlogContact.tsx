@@ -294,31 +294,6 @@ export function Contact({ cmsData }: ContactProps) {
             >
               Chat WhatsApp
             </a>
-
-            <div className="flex gap-4">
-              {cmsData.instagram && (
-                <a
-                  href={cmsData.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-shrink-0 w-14 h-14 bg-slate-800 rounded-xl flex items-center justify-center hover:bg-gradient-to-tr hover:from-amber-400 hover:via-rose-500 hover:to-fuchsia-600 text-slate-400 hover:text-white transition-all shadow-lg hover:-translate-y-1"
-                  title="Instagram"
-                >
-                  <Instagram size={24} />
-                </a>
-              )}
-              {cmsData.facebook && (
-                <a
-                  href={cmsData.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-shrink-0 w-14 h-14 bg-slate-800 rounded-xl flex items-center justify-center hover:bg-blue-600 text-slate-400 hover:text-white transition-all shadow-lg hover:-translate-y-1"
-                  title="Facebook"
-                >
-                  <Facebook size={24} />
-                </a>
-              )}
-            </div>
           </div>
         </div>
 
