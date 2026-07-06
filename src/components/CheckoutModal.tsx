@@ -922,7 +922,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                 </button>
                 <button
                   onClick={handleShareWhatsApp}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xs transition-all active:scale-95 shadow-lg shadow-teal-500/10 cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white font-black text-xs transition-all active:scale-95 shadow-lg shadow-emerald-500/10 cursor-pointer"
                 >
                   <MessageSquare size={14} />
                   Bagikan Status ke WhatsApp

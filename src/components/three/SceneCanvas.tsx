@@ -309,6 +309,12 @@ function RoomShell() {
             <meshStandardMaterial color={roomConfig.wallColor || '#f8fafc'} roughness={0.9} />
           </mesh>
 
+          {/* Front Wall */}
+          <mesh position={[0, h / 2, l / 2]} rotation={[0, Math.PI, 0]} receiveShadow castShadow>
+            <planeGeometry args={[w, h]} />
+            <meshStandardMaterial color={roomConfig.wallColor || '#f8fafc'} roughness={0.9} />
+          </mesh>
+
           {/* Door on the Back Wall (Right Side) */}
           {(() => {
             const doorX = w / 2 - 0.65;
@@ -349,27 +355,6 @@ function RoomShell() {
             <planeGeometry args={[l, h]} />
             <meshStandardMaterial color={roomConfig.wallColor || '#f1f5f9'} roughness={0.9} />
           </mesh>
-
-          {/* Row of 4 Window Frames on Left Wall */}
-          {[-0.3, -0.1, 0.1, 0.3].map((offsetMultiplier, idx) => {
-            const winZ = offsetMultiplier * l;
-            const winX = -w / 2 + 0.015;
-            const winY = 1.35;
-            return (
-              <group key={idx} position={[winX, winY, winZ]} rotation={[0, Math.PI / 2, 0]}>
-                {/* Frame */}
-                <mesh castShadow>
-                  <boxGeometry args={[0.45, 1.2, 0.025]} />
-                  <meshStandardMaterial color="#e2e8f0" roughness={0.8} />
-                </mesh>
-                {/* Glass */}
-                <mesh position={[0, 0, -0.005]}>
-                  <planeGeometry args={[0.39, 1.14]} />
-                  <meshStandardMaterial color="#ffffff" roughness={0.05} metalness={0.95} />
-                </mesh>
-              </group>
-            );
-          })}
 
           {/* Right Wall */}
           <mesh position={[w / 2, h / 2, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow castShadow>
@@ -526,11 +511,6 @@ export default function SceneCanvas() {
               fadeStrength={1}
               infiniteGrid
             />
-          )}
-
-          {/* SketchUp-style Axes Helper at corner of room grid */}
-          {!backgroundPhotoUrl && cameraConfig.helperVisible && (
-            <axesHelper args={[3]} position={[-w / 2 + 0.01, 0.01, -l / 2 + 0.01]} />
           )}
 
           {/* Camera OrbitControls */}

@@ -161,9 +161,30 @@ const fallbackItems3D: CatalogItem[] = [
     thumbnail_url: '',
     base_price: 2000000,
     price_unit: 'per_meter',
-    mesh_parts: { body: 'TVRack_Body', door: 'TVRack_Door' },
+    mesh_parts: { body: 'TVRack_Body', door: 'TVRack_Door', frame: 'TV_Frame', screen: 'Screen_Display' },
     tags: ['tv-rack'],
     sort_order: 5,
+    is_active: true,
+  },
+  {
+    id: 'item-tv-55inch',
+    slug: 'tv-55-inch',
+    name: 'Smart TV 55 Inch',
+    category: 'electronics',
+    description: 'Smart TV 55 Inch (Display)',
+    default_width: 124,
+    default_height: 72,
+    default_depth: 8,
+    min_width: 80,
+    max_width: 200,
+    scalable_axis: ['x', 'y'],
+    glb_url: '',
+    thumbnail_url: '',
+    base_price: 0,
+    price_unit: 'per_piece',
+    mesh_parts: { screen: 'Screen_Display', frame: 'TV_Frame' },
+    tags: ['electronics', 'tv'],
+    sort_order: 6,
     is_active: true,
   },
 ];
@@ -678,11 +699,32 @@ const fallbackMaterials: Material3D[] = [
     is_active: true,
     sort_order: 24,
   },
+  {
+    id: 'mat-solid-black',
+    slug: 'solid-black',
+    name: 'Solid Black',
+    brand: 'Generic',
+    code: 'BLK01',
+    texture_url: '',
+    normal_map_url: '',
+    roughness: 0.2,
+    metalness: 0.8,
+    texture_repeat_x: 1.0,
+    texture_repeat_y: 1.0,
+    color_hex: '#111111',
+    price_modifier: 1.0,
+    price_per_sheet: 0,
+    category: 'solid',
+    finish: 'glossy',
+    applicable_parts: ['frame', 'screen', 'body'],
+    is_active: true,
+    sort_order: 25,
+  },
 ];
 
 // Set to true only if you have created the 'items_3d' and 'materials' tables in your Supabase database.
 // Otherwise, it will directly use local fallbacks to prevent 404 network errors in the console.
-const USE_SUPABASE_CATALOG = true;
+const USE_SUPABASE_CATALOG = false;
 
 async function fetchWithFallback<T>(tableName: string, fallbackData: T, queryFn: () => PromiseLike<any>): Promise<T> {
   if (!USE_SUPABASE_CATALOG) {

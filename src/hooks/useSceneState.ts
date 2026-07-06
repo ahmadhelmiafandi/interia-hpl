@@ -56,6 +56,7 @@ export interface SceneState {
     updates: {
       position?: Partial<{ x: number; y: number; z: number }> | [number, number, number];
       rotationY?: number;
+      rotationX?: number;
       scale?: Partial<{ x: number; y: number; z: number }> | [number, number, number];
     }
   ) => void;
@@ -273,10 +274,10 @@ export const useSceneState = create<SceneState>((set, get) => ({
       newAmbientIntensity = 0.8;
       newSunIntensity = 0.6;
       
-      const defaultMaterialsTV: MaterialAssignment = { body: 'mat-hpl-natural-oak', door: 'mat-hpl-white-glossy' };
+      const defaultMaterialsTV: MaterialAssignment = { body: 'mat-hpl-natural-oak', door: 'mat-hpl-white-glossy', frame: 'mat-solid-black', screen: 'mat-solid-black' };
       
       newItems = [
-        { id: `placed-preset-t1-${Date.now()}`, item3dId: 'item-tv-rack-floating', position: [0, 0.4, -1.0], rotationY: 0, scale: [1.5, 1.0, 1.0], materialAssignments: defaultMaterialsTV }
+        { id: `placed-preset-t1-${Date.now()}`, item3dId: 'item-tv-rack-floating', position: [0, 0.4, -1.0], rotationY: 0, rotationX: 0, scale: [1.5, 1.0, 1.0], materialAssignments: defaultMaterialsTV }
       ];
     }
     
@@ -341,6 +342,7 @@ export const useSceneState = create<SceneState>((set, get) => ({
         item3dId,
         position: [spawnX, 0, spawnZ],
         rotationY: 0,
+        rotationX: 0,
         scale: [1, 1, 1],
         materialAssignments,
       };
@@ -422,6 +424,7 @@ export const useSceneState = create<SceneState>((set, get) => ({
       }
 
       const nextRotY = updates.rotationY !== undefined ? updates.rotationY : item.rotationY;
+      const nextRotX = updates.rotationX !== undefined ? updates.rotationX : (item.rotationX || 0);
 
       // ── WALL COLLISION CLAMPING ("mentok tembok") ──
       const catalogItem = state.itemsCatalog.find(ci => ci.id === item.item3dId);
@@ -448,12 +451,72 @@ export const useSceneState = create<SceneState>((set, get) => ({
         if (isWallItem) {
           nextPos[1] = Math.max(0, Math.min(roomH - fh, nextPos[1]));
         }
+
+        // ── INTER-ITEM COLLISION DETECTION ("tidak tembus item lain") ──
+        const isOverlapping = (checkX: number, checkY: number, checkZ: number, skipId: string) => {
+            const checkMinY = checkY;
+            const checkMaxY = checkY + fh;
+
+            for (const other of state.placedItems) {
+                if (other.id === skipId) continue;
+                const otherCat = state.itemsCatalog.find(c => c.id === other.item3dId);
+                if (!otherCat) continue;
+                
+                // Y check (Height)
+                const o_fh = (otherCat.default_height * other.scale[1]) / 100;
+                const o_minY = other.position[1];
+                const o_maxY = other.position[1] + o_fh;
+                
+                // If they don't overlap in Y, they can't collide
+                if (checkMaxY <= o_minY + 0.01 || checkMinY >= o_maxY - 0.01) {
+                    continue;
+                }
+
+                // X/Z check (Floor plan)
+                const o_fw = (otherCat.default_width * other.scale[0]) / 100;
+                const o_fd = (otherCat.default_depth * other.scale[2]) / 100;
+                const o_cos = Math.abs(Math.cos(other.rotationY));
+                const o_sin = Math.abs(Math.sin(other.rotationY));
+                const o_halfX = (o_fw * o_cos + o_fd * o_sin) / 2;
+                const o_halfZ = (o_fw * o_sin + o_fd * o_cos) / 2;
+
+                if (
+                    Math.abs(checkX - other.position[0]) < (halfExtX + o_halfX) - 0.02 &&
+                    Math.abs(checkZ - other.position[2]) < (halfExtZ + o_halfZ) - 0.02
+                ) {
+                    return true; // Overlap!
+                }
+            }
+            return false;
+        };
+
+        if (isOverlapping(nextPos[0], nextPos[1], nextPos[2], item.id)) {
+            // Try sliding on X (Revert Z)
+            if (!isOverlapping(nextPos[0], nextPos[1], item.position[2], item.id)) {
+                nextPos[2] = item.position[2];
+            }
+            // Try sliding on Z (Revert X)
+            else if (!isOverlapping(item.position[0], nextPos[1], nextPos[2], item.id)) {
+                nextPos[0] = item.position[0];
+            }
+            // If both fail, revert to original position
+            else {
+                nextPos[0] = item.position[0];
+                nextPos[2] = item.position[2];
+            }
+            
+            // Check Y one last time just in case
+            if (isOverlapping(nextPos[0], nextPos[1], nextPos[2], item.id)) {
+                 nextPos[1] = item.position[1];
+            }
+        }
       }
 
       return {
         ...item,
         position: nextPos,
         rotationY: nextRotY,
+        rotationX: nextRotX,
         scale: nextScale
       };
     })

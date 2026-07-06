@@ -17,9 +17,11 @@ export default function CatalogPanel({ onAddItem }: CatalogPanelProps) {
   const { itemsCatalog, addItem, isLoadingCatalog } = useSceneState();
   const [activeTab, setActiveTab] = useState('all');
 
-  const filteredItems = activeTab === 'all'
-    ? itemsCatalog
-    : itemsCatalog.filter(item => item.category === activeTab);
+  const filteredItems = itemsCatalog.filter(item => {
+    if (item.category === 'electronics') return false; // Sembunyikan TV dari list karena otomatis spawn dengan rak
+    if (activeTab === 'all') return true;
+    return item.category === activeTab;
+  });
 
   const getIcon = (slug: string) => {
     if (slug.includes('kitchen')) {

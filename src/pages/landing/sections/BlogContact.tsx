@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Mail,
   Phone,
@@ -24,6 +24,17 @@ export function Blog({ cmsData, contactData }: BlogProps) {
     string,
     any
   > | null>(null);
+
+  useEffect(() => {
+    if (selectedArticle) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [selectedArticle]);
 
   const defaultArticles = [
     {
@@ -65,11 +76,11 @@ export function Blog({ cmsData, contactData }: BlogProps) {
       : defaultArticles;
 
   return (
-    <section className="py-24 bg-white relative">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6 reveal">
+    <section className="py-12 md:py-20 lg:py-24 bg-white relative">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-6 reveal">
           <div className="space-y-4">
-            <h2 className="text-4xl font-extrabold text-slate-900">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900">
               Inspirasi & Edukasi
             </h2>
             <p className="text-slate-500 font-light text-lg">
@@ -89,7 +100,7 @@ export function Blog({ cmsData, contactData }: BlogProps) {
         </div>
 
         {/* Mobile Slider / Desktop Grid */}
-        <div className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-visible pb-12 md:pb-0 snap-x snap-mandatory hide-scrollbar -mx-6 px-6 md:mx-0 md:px-0">
+        <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-visible pb-12 md:pb-0 snap-x snap-mandatory hide-scrollbar -mx-6 px-6 md:mx-0 md:px-0">
           {articles.map((a: any, i: number) => (
             <article
               key={i}
@@ -141,12 +152,12 @@ export function Blog({ cmsData, contactData }: BlogProps) {
 
       {/* Blog Detail Modal */}
       {selectedArticle && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4 lg:p-8">
           <div
             className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
             onClick={() => setSelectedArticle(null)}
           ></div>
-          <div className="bg-white w-full max-w-4xl rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[90vh] animate-modal-in">
+          <div className="bg-white w-full h-full md:h-auto max-w-full md:max-w-4xl md:rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[100vh] md:max-h-[90vh] animate-modal-in">
             <button
               onClick={() => setSelectedArticle(null)}
               className="absolute top-6 right-6 w-12 h-12 bg-white/20 hover:bg-white/40 lg:bg-slate-100 lg:hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-900 transition-all z-20 shadow-lg"
@@ -243,33 +254,36 @@ export function Contact({ cmsData }: ContactProps) {
   return (
     <section
       id="kontak"
-      className="py-24 bg-slate-900 text-slate-300 relative overflow-hidden"
+      className="py-12 md:py-20 lg:py-24 bg-slate-900 text-slate-300 relative overflow-hidden"
     >
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10 flex flex-col md:flex-row gap-16 items-center">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 relative z-10 flex flex-col lg:flex-row gap-12 md:gap-16 items-center">
         <div className="flex-1 space-y-8">
           <div className="text-sm font-bold text-teal-400 uppercase tracking-widest relative inline-block reveal">
-            Siap untuk memulai?
+            {cmsData?.contactBadge || "Siap untuk memulai?"}
             <div className="absolute -bottom-2 left-0 w-1/2 h-1 bg-teal-400 rounded-full"></div>
           </div>
 
-          <h2 className="text-4xl md:text-5xl font-extrabold text-white leading-tight reveal">
-            Kunjungi <span className="text-indigo-400">Workshop</span>
-            <br />
-            atau hubungi kami.
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white leading-tight reveal">
+            {cmsData?.contactHeading || (
+              <>
+                Kunjungi <span className="text-indigo-400">Workshop</span>
+                <br />
+                atau hubungi kami.
+              </>
+            )}
           </h2>
 
           <p className="text-lg leading-relaxed font-light text-slate-400 max-w-md reveal">
-            Tim desain dan spesialis perakitan kami siap menjawab setiap
-            pertanyaan Anda mengenai pembuatan furnitur.
+            {cmsData?.contactDescription || "Tim desain dan spesialis perakitan kami siap menjawab setiap pertanyaan Anda mengenai pembuatan furnitur."}
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
             <div className="flex items-start gap-4 reveal-left">
               <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
                 <Phone className="text-teal-400" />
               </div>
               <div>
-                <h4 className="font-bold text-white mb-1">WhatsApp Langsung</h4>
+                <h4 className="font-bold text-white mb-1">{cmsData?.whatsappLabel || "WhatsApp Langsung"}</h4>
                 <p className="text-slate-400">{cmsData.phone}</p>
               </div>
             </div>
@@ -278,7 +292,7 @@ export function Contact({ cmsData }: ContactProps) {
                 <Mail className="text-teal-400" />
               </div>
               <div>
-                <h4 className="font-bold text-white mb-1">Email Pertanyaan</h4>
+                <h4 className="font-bold text-white mb-1">{cmsData?.emailLabel || "Email Pertanyaan"}</h4>
                 <p className="text-slate-400">{cmsData.email}</p>
               </div>
             </div>
@@ -307,21 +321,21 @@ export function Contact({ cmsData }: ContactProps) {
                 />
                 <div>
                   <h5 className="font-bold text-slate-900 leading-none">
-                    Afandi Interior Workshop
+                    {cmsData?.workshopName || "Afandi Interior Workshop"}
                   </h5>
                   <p className="text-[10px] text-slate-500">
-                    Jepara, Jawa Tengah
+                    {cmsData?.workshopLocation || "Jepara, Jawa Tengah"}
                   </p>
                 </div>
               </div>
               <div className="text-xs text-slate-600 border-t border-slate-100 pt-2 flex items-center gap-1 font-bold">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                Buka hingga 17:00 WIB
+                {cmsData?.workshopHours || "Buka hingga 17:00 WIB"}
               </div>
             </div>
-            <div className="w-full h-80 bg-slate-700 rounded-2xl overflow-hidden relative">
+            <div className="w-full h-64 md:h-80 lg:h-96 bg-slate-700 rounded-2xl overflow-hidden relative">
               <iframe
-                src="https://www.google.com/maps?q=Afandi+Interior+Workshop+Jepara&z=16&output=embed"
+                src={cmsData?.mapUrl || "https://www.google.com/maps?q=Afandi+Interior+Workshop+Jepara&z=16&output=embed"}
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}

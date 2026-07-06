@@ -7,36 +7,38 @@ import {
   Ruler,
   ThumbsUp,
   Utensils,
+  ArrowRight,
 } from "lucide-react";
 import TypingText from "../../../components/ui/TypingText";
 
 interface SectionProps {
   cmsData?: any;
+  contactData?: any;
 }
 
 export function About({ cmsData }: SectionProps) {
   if (!cmsData) return null;
   return (
-    <section id="tentang" className="py-24 bg-white overflow-hidden relative">
+    <section id="tentang" className="py-12 md:py-20 lg:py-24 bg-white overflow-hidden relative">
       {/* Decorative Background Element */}
       <div className="absolute top-0 right-0 w-1/4 h-full bg-teal-50/50 -skew-x-12 transform origin-top translate-x-16 hidden lg:block"></div>
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10 flex flex-col md:flex-row items-center gap-16 md:gap-24">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-16 lg:gap-24">
         <div className="flex-1 space-y-8 reveal-left">
           <div className="inline-flex items-center gap-3 text-xs font-black text-teal-600 uppercase tracking-[0.3em] bg-teal-50 px-4 py-2 rounded-full border border-teal-100">
-            <Hammer size={14} /> Lebih Dari Sekadar Furniture
+            <Hammer size={14} /> {cmsData?.badge || "Lebih Dari Sekadar Furniture"}
           </div>
-          <h2 className="text-4xl md:text-6xl font-extrabold text-slate-900 leading-[1.1] tracking-tight">
-            Afandi Interior: <br />
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 leading-[1.1] tracking-tight">
+            {cmsData?.headingLine1 || "Afandi Interior:"} <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-teal-400">
-              Seni Desain
+              {cmsData?.headingHighlight1 || "Seni Desain"}
             </span>{" "}
             & <br className="hidden md:block" />
             <span className="text-slate-800 italic font-playfair">
-              Keahlian Presisi
+              {cmsData?.headingHighlight2 || "Keahlian Presisi"}
             </span>
           </h2>
-          <p className="text-lg text-slate-500 leading-relaxed font-normal max-w-xl">
+          <p className="text-base md:text-lg text-slate-500 leading-relaxed font-normal max-w-xl">
             <TypingText
               text={cmsData.description}
               speed={30}
@@ -44,17 +46,17 @@ export function About({ cmsData }: SectionProps) {
               startOnVisible
             />
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 pt-4">
             <div className="reveal-left reveal-delay-200 flex items-center gap-4 p-5 rounded-2xl bg-slate-50 border border-slate-100 group hover:border-teal-200 transition-colors">
               <div className="p-3 rounded-xl bg-white shadow-sm text-teal-600 group-hover:scale-110 transition-transform">
                 <ShieldCheck size={24} />
               </div>
               <div>
                 <h4 className="font-bold text-slate-900 mb-0.5">
-                  Garansi Kualitas
+                  {cmsData?.feature1Title || "Garansi Kualitas"}
                 </h4>
                 <p className="text-xs text-slate-400">
-                  Material grade-A pilihan
+                  {cmsData?.feature1Desc || "Material grade-A pilihan"}
                 </p>
               </div>
             </div>
@@ -64,10 +66,10 @@ export function About({ cmsData }: SectionProps) {
               </div>
               <div>
                 <h4 className="font-bold text-slate-900 mb-0.5">
-                  Presisi Milimeter
+                  {cmsData?.feature2Title || "Presisi Milimeter"}
                 </h4>
                 <p className="text-xs text-slate-400">
-                  Hasil akurat 100% custom
+                  {cmsData?.feature2Desc || "Hasil akurat 100% custom"}
                 </p>
               </div>
             </div>
@@ -82,7 +84,7 @@ export function About({ cmsData }: SectionProps) {
                 "https://images.unsplash.com/photo-1540932239986-30128078f3d5?q=80&w=1200&auto=format&fit=crop"
               }
               className="w-full aspect-[4/5] md:aspect-auto md:h-[600px] object-cover transition-transform duration-700 group-hover:scale-110"
-              alt="Tim Workshop Afandi Interior"
+              alt={cmsData?.imgAlt || "Tim Workshop Afandi Interior"}
             />
             {/* Overlay Gradient */}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
@@ -96,7 +98,7 @@ export function About({ cmsData }: SectionProps) {
                   {cmsData.badgeValue || "5+"}
                 </span>
                 <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-wider mt-1 opacity-80">
-                  Years
+                  {cmsData?.badgeUnit || "Years"}
                 </span>
               </div>
               <div className="pr-4 md:pr-8 border-r border-slate-100">
@@ -118,7 +120,7 @@ export function About({ cmsData }: SectionProps) {
   );
 }
 
-export function Services({ cmsData }: SectionProps) {
+export function Services({ cmsData, contactData }: SectionProps) {
   const defaultServices = [
     {
       icon: <LayoutDashboard size={40} className="text-indigo-600" />,
@@ -157,18 +159,18 @@ export function Services({ cmsData }: SectionProps) {
   return (
     <section
       id="layanan"
-      className="py-24 bg-slate-50 relative overflow-hidden"
+      className="py-12 md:py-20 lg:py-24 bg-slate-50 relative overflow-hidden"
     >
       {/* Soft decorative circles */}
       <div className="absolute top-[-10%] left-[-5%] w-[40%] aspect-square bg-teal-500/5 rounded-full blur-[120px]"></div>
       <div className="absolute bottom-[-10%] right-[-5%] w-[40%] aspect-square bg-indigo-500/5 rounded-full blur-[120px]"></div>
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-20 space-y-4 reveal">
           <div className="text-xs font-black text-teal-600 uppercase tracking-[0.4em] bg-white inline-block px-4 py-2 rounded-full border border-teal-100 shadow-sm">
             Layanan Afandi Interior
           </div>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight tracking-tight">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 leading-tight tracking-tight">
             Spesialisasi Kami dalam <br />
             <span className="italic font-playfair text-teal-600 font-normal">
               Membangun Kenyamanan
@@ -176,11 +178,11 @@ export function Services({ cmsData }: SectionProps) {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
           {services.map((s: any, i: number) => (
             <div
               key={i}
-              className={`bg-white p-10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.02)] border border-slate-100 hover:shadow-[0_40px_80px_rgba(0,0,0,0.08)] hover:border-teal-100 transition-all group flex flex-col h-full transform hover:-translate-y-3 duration-500 relative overflow-hidden reveal reveal-delay-${(i + 1) * 100}`}
+              className={`bg-white p-6 md:p-8 lg:p-10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.02)] border border-slate-100 hover:shadow-[0_40px_80px_rgba(0,0,0,0.08)] hover:border-teal-100 transition-all group flex flex-col h-full transform hover:-translate-y-3 duration-500 relative overflow-hidden reveal reveal-delay-${(i + 1) * 100}`}
             >
               {/* Subtle top accent */}
               <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-500/0 via-teal-500/40 to-teal-500/0 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -201,14 +203,14 @@ export function Services({ cmsData }: SectionProps) {
 
               <div className="mt-10 overflow-hidden">
                 <a
-                  href={`https://wa.me/${cmsData?.phone?.replace(/[^0-9]/g, "") || ""}?text=Halo Afandi Interior, saya ingin bertanya tentang ${s.title}`}
+                  href={`https://wa.me/${contactData?.phone?.replace(/[^0-9]/g, "") || ""}?text=Halo Afandi Interior, saya ingin bertanya tentang ${s.title}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center text-xs font-black text-teal-600 group-hover:text-teal-700 uppercase tracking-[0.2em] relative"
+                  className="inline-flex items-center gap-1.5 text-xs font-black text-teal-600 group-hover:text-teal-700 uppercase tracking-[0.2em] relative"
                 >
-                  <span className="relative z-10 mr-2">Pelajari</span>
-                  <span className="text-lg transition-transform duration-300 group-hover:translate-x-1">
-                    &rarr;
+                  <span className="relative z-10">Pelajari</span>
+                  <span className="transition-transform duration-300 group-hover:translate-x-1">
+                    <ArrowRight size={16} />
                   </span>
                 </a>
               </div>

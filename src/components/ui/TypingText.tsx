@@ -17,6 +17,7 @@ export default function TypingText({
 }: TypingTextProps) {
   const [displayedText, setDisplayedText] = useState("");
   const [started, setStarted] = useState(!startOnVisible);
+  const [isCompleted, setIsCompleted] = useState(false);
   const spanRef = useRef<HTMLSpanElement | null>(null);
 
   useEffect(() => {
@@ -45,6 +46,7 @@ export default function TypingText({
 
   useEffect(() => {
     setDisplayedText("");
+    setIsCompleted(false);
     if (!text || (startOnVisible && !started)) return;
 
     let intervalId: number | undefined;
@@ -55,6 +57,7 @@ export default function TypingText({
         setDisplayedText(text.slice(0, index));
         if (index >= text.length && intervalId) {
           window.clearInterval(intervalId);
+          setIsCompleted(true);
         }
       }, speed);
     }, delay);
@@ -70,8 +73,10 @@ export default function TypingText({
       ref={spanRef}
       className={`inline-block whitespace-pre-wrap overflow-hidden ${className}`}
     >
-      {displayedText}
-      <span className="inline-block w-0.5 h-5 align-middle bg-slate-400 animate-[blink_1s_steps(2)_infinite] ml-1" />
+      <span>{displayedText}</span>
+      {!isCompleted && (
+        <span className="inline-block w-0.5 h-5 align-middle bg-slate-400 animate-[blink_1s_steps(2)_infinite] ml-1" />
+      )}
     </span>
   );
 }

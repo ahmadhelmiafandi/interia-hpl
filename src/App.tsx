@@ -62,6 +62,23 @@ function App() {
                 </React.Suspense>
               } 
             />
+            {/* Fallbacks for older links or local storage settings */}
+            <Route 
+              path="/configurator-3d" 
+              element={
+                <React.Suspense fallback={<div className="bg-slate-950 h-screen w-screen"></div>}>
+                  <Configurator3DPage />
+                </React.Suspense>
+              } 
+            />
+            <Route 
+              path="/configurator 3d" 
+              element={
+                <React.Suspense fallback={<div className="bg-slate-950 h-screen w-screen"></div>}>
+                  <Configurator3DPage />
+                </React.Suspense>
+              } 
+            />
 
             {/* admin Dashboard */}
             <Route path="/admin" element={<AdminLayout />}>

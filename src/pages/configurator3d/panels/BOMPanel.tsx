@@ -129,7 +129,7 @@ export default function BOMPanel({ onCheckout }: { onCheckout?: () => void }) {
               disabled={bom.items.length === 0}
               className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-sm tracking-wide shadow-lg transition-all duration-300 ${
                 bom.items.length > 0
-                  ? 'bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white shadow-teal-500/20 hover:scale-[1.02] active:scale-95 cursor-pointer animate-pulse'
+                  ? 'bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white shadow-teal-600/30 hover:scale-[1.02] active:scale-95 cursor-pointer'
                   : 'bg-slate-800 text-slate-500 shadow-none cursor-not-allowed opacity-50'
               }`}
             >

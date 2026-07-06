@@ -209,7 +209,9 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
     setIsDragging(true);
     setIsDraggingItem(true); // Nonaktifkan OrbitControls selama drag
     // Minta canvas render ulang pointer (workaround R3F drag)
-    e.target.setPointerCapture(e.pointerId);
+    if (e.target && 'setPointerCapture' in e.target) {
+      (e.target as Element).setPointerCapture(e.pointerId);
+    }
   };
 
   const handleDragPlaneMove = (e: ThreeEvent<PointerEvent>) => {
@@ -249,8 +251,11 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
     e.stopPropagation();
     setIsDragging(false);
     setIsDraggingItem(false);
-    if (e.target.hasPointerCapture(e.pointerId)) {
-      e.target.releasePointerCapture(e.pointerId);
+    if (e.target && 'releasePointerCapture' in e.target && 'hasPointerCapture' in e.target) {
+      const target = e.target as Element;
+      if (target.hasPointerCapture(e.pointerId)) {
+        target.releasePointerCapture(e.pointerId);
+      }
     }
   };
 
@@ -351,6 +356,17 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
     const bodyProps = getMaterialProps('body');
     const doorProps = getMaterialProps('door');
 
+    // TV Materials
+    const frameProps = getMaterialProps('frame') || { color: '#111111', roughness: 0.2, metalness: 0.8 };
+    const screenProps = getMaterialProps('screen') || { color: '#000000', roughness: 0.05, metalness: 0.9 };
+    
+    // TV Dimensions (approx 55 inch)
+    const tvW = 1.24;
+    const tvH = 0.72;
+    const tvD = 0.08;
+    // Position TV slightly above the rack
+    const tvYOffset = h / 2 + 0.1 + tvH / 2;
+
     return (
       <group>
         {/* Floating Cabinet Main Body */}
@@ -364,6 +380,68 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
         <mesh position={[0, 0, d / 2 + 0.004]} castShadow>
           <boxGeometry args={[w - 0.02, h - 0.02, 0.015]} />
           <meshStandardMaterial {...doorProps} />
+        </mesh>
+
+        {/* === INTEGRATED TV === */}
+        <group position={[0, tvYOffset, -d / 4]}>
+          {/* TV Body/Frame */}
+          <mesh castShadow receiveShadow>
+            <boxGeometry args={[tvW, tvH, tvD]} />
+            <meshStandardMaterial {...frameProps} />
+          </mesh>
+          
+          {/* TV Screen Panel */}
+          <mesh position={[0, 0, tvD / 2 + 0.001]}>
+            <planeGeometry args={[tvW - 0.04, tvH - 0.04]} />
+            <meshStandardMaterial {...screenProps} />
+          </mesh>
+          
+          {/* TV Base/Stand */}
+          <mesh position={[0, -tvH / 2 - 0.01, 0]} castShadow>
+            <boxGeometry args={[tvW * 0.3, 0.015, tvD * 2.5]} />
+            <meshStandardMaterial {...frameProps} />
+          </mesh>
+          
+          {/* TV Neck */}
+          <mesh position={[0, -tvH / 2 - 0.005, 0]} castShadow>
+            <boxGeometry args={[0.08, 0.04, 0.04]} />
+            <meshStandardMaterial {...frameProps} />
+          </mesh>
+        </group>
+      </group>
+    );
+  };
+
+  // 5. Smart TV Model
+  const renderTV = () => {
+    const frameProps = getMaterialProps('frame') || { color: '#111111', roughness: 0.2, metalness: 0.8 };
+    const screenProps = getMaterialProps('screen') || { color: '#000000', roughness: 0.05, metalness: 0.9 };
+    
+    return (
+      <group>
+        {/* TV Body/Frame */}
+        <mesh castShadow receiveShadow>
+          <boxGeometry args={[w, h, d]} />
+          <meshStandardMaterial {...frameProps} />
+          <SelectionHighlight isSelected={isSelected} />
+        </mesh>
+        
+        {/* TV Screen Panel */}
+        <mesh position={[0, 0, d / 2 + 0.001]}>
+          <planeGeometry args={[w - 0.04, h - 0.04]} />
+          <meshStandardMaterial {...screenProps} />
+        </mesh>
+        
+        {/* TV Base/Stand */}
+        <mesh position={[0, -h / 2 - 0.02, 0]} castShadow>
+          <boxGeometry args={[w * 0.3, 0.015, d * 2.5]} />
+          <meshStandardMaterial {...frameProps} />
+        </mesh>
+        
+        {/* TV Neck */}
+        <mesh position={[0, -h / 2 - 0.005, 0]} castShadow>
+          <boxGeometry args={[0.08, 0.04, 0.04]} />
+          <meshStandardMaterial {...frameProps} />
         </mesh>
       </group>
     );
@@ -381,6 +459,8 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
         return renderWardrobe();
       case 'tv-rack':
         return renderTVRack();
+      case 'electronics':
+        return renderTV();
       default:
         return (
           <mesh castShadow receiveShadow>
@@ -399,7 +479,7 @@ export default function FurnitureItem({ item, isSelected }: FurnitureItemProps) 
     <group
       ref={groupRef}
       position={[item.position[0], posY, item.position[2]]}
-      rotation={[0, item.rotationY, 0]}
+      rotation={[item.rotationX || 0, item.rotationY, 0]}
       onPointerDown={handlePointerDown}
     >
       {renderModel()}

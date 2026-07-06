@@ -33,13 +33,13 @@ export default function Home() {
   if (!settings) return null; // Or a subtle loading screen
 
   return (
-    <div className="min-h-screen font-sans bg-slate-50 text-slate-800 selection:bg-indigo-500/30">
+    <div className="min-h-screen font-sans bg-slate-50 text-slate-800 selection:bg-indigo-500/30 overflow-x-hidden">
       <Navbar cmsData={settings} />
 
       <main>
         <Hero cmsData={settings.hero} />
         <About cmsData={settings.about} />
-        <Services cmsData={settings.services} />
+        <Services cmsData={settings.services} contactData={settings.contact} />
         <Products cmsData={settings.products} />
         <HowItWorks cmsData={settings.howItWorks} />
         <Portfolio cmsData={settings.portfolio} contactData={settings.contact} />

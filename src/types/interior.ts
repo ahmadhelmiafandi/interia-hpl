@@ -19,6 +19,7 @@ export interface PlacedItem {
   item3dId: string;
   position: [number, number, number]; // [x, y, z] in meters
   rotationY: number; // radians
+  rotationX?: number; // radians
   scale: [number, number, number]; // [x, y, z] scale factors
   materialAssignments: MaterialAssignment;
 }

@@ -75,6 +75,16 @@ export default function PropertiesPanel() {
     });
   };
 
+  const handleRotationXChange = (degValue: string) => {
+    let numDeg = Number(degValue);
+    const rad = (numDeg * Math.PI) / 180;
+    
+    // Position clamping is complex for X rotation, we just update it
+    updateItemTransform(selectedItem.id, {
+      rotationX: rad
+    });
+  };
+
   // Rotation Y (Euler, converted from degrees to radians)
   const handleRotationChange = (degValue: string) => {
     let numDeg = Number(degValue);
@@ -136,6 +146,10 @@ export default function PropertiesPanel() {
   let currentRotationDeg = Math.round((selectedItem.rotationY * 180) / Math.PI);
   if (currentRotationDeg < 0) currentRotationDeg += 360;
   if (currentRotationDeg >= 360 && currentRotationDeg % 360 === 0) currentRotationDeg = 0;
+
+  let currentRotationXDeg = Math.round(((selectedItem.rotationX || 0) * 180) / Math.PI);
+  if (currentRotationXDeg < 0) currentRotationXDeg += 360;
+  if (currentRotationXDeg >= 360 && currentRotationXDeg % 360 === 0) currentRotationXDeg = 0;
 
   const canScaleX = catalogItem.scalable_axis?.includes('x');
 
@@ -211,24 +225,49 @@ export default function PropertiesPanel() {
             <RotateCw size={13} className="text-teal-400" />
             Rotasi Furnitur
           </h4>
-          <div className="bg-slate-950/30 rounded-xl border border-slate-800 p-4 space-y-3">
-            <div className="flex justify-between text-xs font-semibold">
-              <span className="text-slate-400">Sudut (Y-Axis):</span>
-              <span className="text-teal-400">{currentRotationDeg}°</span>
+          <div className="bg-slate-950/30 rounded-xl border border-slate-800 p-4 space-y-4">
+            {/* Rotasi Horizontal (Y) */}
+            <div className="space-y-3">
+              <div className="flex justify-between text-xs font-semibold">
+                <span className="text-slate-400">Rotasi Horizontal:</span>
+                <span className="text-teal-400">{currentRotationDeg}°</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={360}
+                step={15}
+                value={currentRotationDeg === 0 && selectedItem.rotationY > 0 ? 360 : currentRotationDeg}
+                onChange={(e) => handleRotationChange(e.target.value)}
+                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-teal-400"
+              />
+              <div className="flex justify-between text-[10px] text-slate-500 font-mono font-bold">
+                <span>0°</span>
+                <span>180°</span>
+                <span>360°</span>
+              </div>
             </div>
-          <input
-              type="range"
-              min={0}
-              max={360}
-              step={15}
-              value={currentRotationDeg === 0 && selectedItem.rotationY > 0 ? 360 : currentRotationDeg}
-              onChange={(e) => handleRotationChange(e.target.value)}
-              className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-teal-400"
-            />
-            <div className="flex justify-between text-[10px] text-slate-500 font-mono font-bold">
-              <span>0°</span>
-              <span>180°</span>
-              <span>360°</span>
+
+            {/* Rotasi Vertikal (X) */}
+            <div className="space-y-3 pt-2 border-t border-slate-800/50">
+              <div className="flex justify-between text-xs font-semibold">
+                <span className="text-slate-400">Rotasi Vertikal:</span>
+                <span className="text-teal-400">{currentRotationXDeg}°</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={360}
+                step={15}
+                value={currentRotationXDeg === 0 && (selectedItem.rotationX || 0) > 0 ? 360 : currentRotationXDeg}
+                onChange={(e) => handleRotationXChange(e.target.value)}
+                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-teal-400"
+              />
+              <div className="flex justify-between text-[10px] text-slate-500 font-mono font-bold">
+                <span>0°</span>
+                <span>180°</span>
+                <span>360°</span>
+              </div>
             </div>
           </div>
         </div>
