@@ -134,7 +134,7 @@ const AdminLayout = () => {
     `;
 
     return (
-        <div className="h-screen bg-[#f8fafc] flex font-sans text-slate-900 overflow-hidden">
+        <div className="h-screen bg-[#f8fafc] flex font-sans text-slate-900 overflow-hidden print:h-auto print:overflow-visible print:block">
             {/* Mobile Backdrop */}
             {isMobileMenuOpen && (
                 <div 
@@ -144,7 +144,7 @@ const AdminLayout = () => {
             )}
             {/* Sidebar */}
             <aside className={`
-                fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200/60 transition-all duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 shrink-0 overflow-x-hidden
+                fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200/60 transition-all duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 shrink-0 overflow-x-hidden print:hidden
                 ${isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
             `}>
                 <div className="flex flex-col h-full">
@@ -272,9 +272,9 @@ const AdminLayout = () => {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col h-full overflow-hidden">
+            <main className="flex-1 flex flex-col h-full overflow-hidden print:h-auto print:overflow-visible print:block">
                 {/* Header */}
-                <header className="h-16 md:h-20 bg-white/80 backdrop-blur-md border-b border-slate-200/60 flex items-center px-4 md:px-8 lg:px-12 justify-between sticky top-0 z-40 shrink-0">
+                <header className="h-16 md:h-20 bg-white/80 backdrop-blur-md border-b border-slate-200/60 flex items-center px-4 md:px-8 lg:px-12 justify-between sticky top-0 z-40 shrink-0 print:hidden">
                     <div className="flex items-center gap-3 md:gap-4">
                         <button 
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -306,7 +306,7 @@ const AdminLayout = () => {
                 </header>
 
                 {/* Content Area */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-10 lg:p-12 scroll-smooth">
+                <div className="flex-1 overflow-y-auto p-4 md:p-10 lg:p-12 scroll-smooth print:overflow-visible print:p-0 print:h-auto print:block">
                     <div className="max-w-6xl mx-auto animate-fade-in-up">
                         <Outlet />
                     </div>

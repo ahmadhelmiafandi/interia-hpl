@@ -137,18 +137,7 @@ export default function BOMPanel({ onCheckout }: { onCheckout?: () => void }) {
               Pesan & Bayar Sekarang
             </button>
 
-            <button
-              onClick={() => bom.items.length > 0 && setShowExportModal(true)}
-              disabled={bom.items.length === 0}
-              className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-xs tracking-wide transition-all duration-300 ${
-                bom.items.length > 0
-                  ? 'bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white cursor-pointer'
-                  : 'bg-slate-800 text-slate-500 shadow-none cursor-not-allowed opacity-50'
-              }`}
-            >
-              <FileDown size={14} />
-              Unduh Draft Quotation (PDF)
-            </button>
+
           </div>
         </div>
       </div>

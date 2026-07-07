@@ -163,11 +163,47 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
   };
 
   // Simulates processing with progressive logging messages
-  const simulatePayment = (shouldSucceed: boolean) => {
+  const simulatePayment = async (shouldSucceed: boolean) => {
     setIsProcessing(true);
     setProcessingStatus('Mengirim data transaksi ke Secure Gateway...');
     
-    setTimeout(() => {
+    try {
+      if (shouldSucceed) {
+        setProcessingStatus('Menyimpan pesanan ke database...');
+        // Capture 3D Design Snapshot
+        let designSnapshot = '';
+        const canvas = document.querySelector('canvas');
+        if (canvas) {
+          try {
+            designSnapshot = canvas.toDataURL('image/jpeg', 0.8);
+          } catch (e) {
+            console.error('Failed to capture 3D design snapshot:', e);
+          }
+        }
+
+        const orderData = {
+          customer: {
+            ...customer,
+            paymentMethod: paymentMethod === 'va_bca' ? 'BCA Virtual Account' :
+                           paymentMethod === 'va_mandiri' ? 'Mandiri Virtual Account' :
+                           paymentMethod === 'qris' ? 'QRIS' : 'Credit Card'
+          },
+          totalPrice: bom.total,
+          estimatedPrice: bom.total,
+          config: {
+            productSelection: {
+              name: 'Kustomisasi 3D Configurator',
+              shape: 'Custom'
+            },
+            roomConfig,
+            bom,
+            designSnapshot
+          },
+          status: 'Pending'
+        };
+        await api.submitOrder(orderData);
+      }
+      
       setProcessingStatus('Memverifikasi detail pembayaran...');
       setTimeout(() => {
         setProcessingStatus('Melakukan otorisasi 3D-Secure...');
@@ -181,7 +217,11 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
           }
         }, 1200);
       }, 1000);
-    }, 1000);
+    } catch (error) {
+      console.error('Gagal menyimpan pesanan:', error);
+      setIsProcessing(false);
+      setPaymentStatus('failed');
+    }
   };
 
   const handleDownloadPDF = async () => {
@@ -859,7 +899,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                   </button>
                   <button
                     onClick={() => simulatePayment(true)}
-                    className="flex-1 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white font-black text-xs py-2.5 px-4 rounded-xl shadow-lg shadow-teal-500/10 transition-all active:scale-95 cursor-pointer"
+                    className="flex-1 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-black text-xs py-2.5 px-4 rounded-xl shadow-lg shadow-amber-500/20 transition-all active:scale-95 cursor-pointer"
                   >
                     Simulasikan Bayar (Sukses)
                   </button>
@@ -982,7 +1022,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
             {step === 'payment-method' && (
               <button 
                 onClick={() => setStep('gateway')}
-                className="py-2.5 px-5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white font-black text-xs flex items-center gap-1.5 transition-all active:scale-95 shadow-lg shadow-teal-500/15 cursor-pointer"
+                className="py-2.5 px-5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-black text-xs flex items-center gap-1.5 transition-all active:scale-95 shadow-lg shadow-amber-500/20 cursor-pointer"
               >
                 Proses Pembayaran
                 <ArrowRight size={13} />
