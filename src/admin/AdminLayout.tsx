@@ -19,8 +19,8 @@ import AdminLogin from './AdminLogin';
 import { supabase, api } from '../lib/api';
 
 const AdminLayout = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('admin_auth') === 'true');
-    const [isLoading] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [showSettingsDropdown, setShowSettingsDropdown] = useState(true); // Default open for easier navigation
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [settings, setSettings] = useState<Record<string, any> | null>(null);
@@ -30,6 +30,25 @@ const AdminLayout = () => {
     useEffect(() => {
         setIsMobileMenuOpen(false);
     }, [navigate]);
+
+    // Check auth status on mount
+    useEffect(() => {
+        const checkAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            setIsAuthenticated(!!session);
+            setIsLoading(false);
+        };
+        
+        checkAuth();
+
+        // Listen for auth changes (login/logout)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setIsAuthenticated(!!session);
+            setIsLoading(false);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
 
     const fetchPendingCount = async () => {
         try {
@@ -80,10 +99,12 @@ const AdminLayout = () => {
         };
     }, [isAuthenticated]);
 
-    const handleLogout = () => {
-        localStorage.removeItem('admin_auth');
+    const handleLogout = async () => {
+        setIsLoading(true);
+        await supabase.auth.signOut();
         setIsAuthenticated(false);
         navigate('/admin');
+        setIsLoading(false);
     };
 
     if (isLoading) {
@@ -114,14 +135,13 @@ const AdminLayout = () => {
 
     return (
         <div className="h-screen bg-[#f8fafc] flex font-sans text-slate-900 overflow-hidden">
-            {/* Mobile Menu Toggle */}
-            <button 
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden fixed bottom-6 right-6 z-[60] w-14 h-14 bg-slate-900 text-white rounded-full shadow-2xl flex items-center justify-center active:scale-95 transition-transform"
-            >
-                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-
+            {/* Mobile Backdrop */}
+            {isMobileMenuOpen && (
+                <div 
+                    className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
+            )}
             {/* Sidebar */}
             <aside className={`
                 fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200/60 transition-all duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 shrink-0 overflow-x-hidden
@@ -129,7 +149,7 @@ const AdminLayout = () => {
             `}>
                 <div className="flex flex-col h-full">
                     {/* Brand */}
-                    <div className="h-32 flex items-center px-8 border-b border-slate-100 mb-4 bg-white">
+                    <div className="h-32 flex items-center justify-between px-8 border-b border-slate-100 mb-4 bg-white relative">
                         <div className="flex items-center gap-4">
                             <div className="w-[72px] h-[72px] flex items-center justify-center overflow-hidden">
                                 {settings?.site?.adminLogo ? (
@@ -149,6 +169,12 @@ const AdminLayout = () => {
                                 </div>
                             </div>
                         </div>
+                        <button 
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="lg:hidden absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
+                        >
+                            <X size={20} />
+                        </button>
                     </div>
 
                     {/* Navigation */}
@@ -248,33 +274,39 @@ const AdminLayout = () => {
             {/* Main Content */}
             <main className="flex-1 flex flex-col h-full overflow-hidden">
                 {/* Header */}
-                <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200/60 flex items-center px-8 lg:px-12 justify-between sticky top-0 z-40 shrink-0">
-                    <div className="flex items-center gap-4">
+                <header className="h-16 md:h-20 bg-white/80 backdrop-blur-md border-b border-slate-200/60 flex items-center px-4 md:px-8 lg:px-12 justify-between sticky top-0 z-40 shrink-0">
+                    <div className="flex items-center gap-3 md:gap-4">
+                        <button 
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            className="lg:hidden p-2 -ml-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors"
+                        >
+                            <Menu size={20} />
+                        </button>
                         <div className="hidden lg:flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
                             <span>Pages</span>
                             <span className="text-slate-300">/</span>
                             <span className="text-slate-900">Dashboard</span>
                         </div>
-                        <h2 className="lg:hidden text-lg font-black tracking-tight">DASHBOARD</h2>
+                        <h2 className="lg:hidden text-base md:text-lg font-black tracking-tight uppercase truncate">DASHBOARD</h2>
                     </div>
                     
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 md:gap-4 shrink-0">
                         <NavLink 
                             to="/" 
-                            className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-900 px-4 py-2 rounded-lg transition-all"
+                            className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-900 px-2 md:px-4 py-2 rounded-lg transition-all"
                         >
-                            <Globe size={16} />
+                            <Globe size={18} />
                             <span className="hidden sm:inline">Pratinjau Web</span>
                         </NavLink>
                         <div className="w-px h-6 bg-slate-200 hidden sm:block"></div>
-                        <div className="flex items-center gap-3 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+                        <div className="hidden sm:flex items-center gap-3 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
                             <span className="text-[10px] font-black text-slate-600 uppercase">Server Online</span>
                         </div>
                     </div>
                 </header>
 
                 {/* Content Area */}
-                <div className="flex-1 overflow-y-auto p-6 md:p-10 lg:p-12 scroll-smooth">
+                <div className="flex-1 overflow-y-auto p-4 md:p-10 lg:p-12 scroll-smooth">
                     <div className="max-w-6xl mx-auto animate-fade-in-up">
                         <Outlet />
                     </div>

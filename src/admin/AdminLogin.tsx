@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { LogIn, Lock, User, AlertCircle } from 'lucide-react';
 
+import { supabase } from '../lib/api';
+
 interface AdminLoginProps {
     onLogin: (value: boolean) => void;
 }
 
 const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -14,20 +16,34 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError('');
+
+        if (!email || !email.includes('@') || !email.includes('.')) {
+            setError('Login gagal.');
+            return;
+        }
+
+        if (!password) {
+            setError('Login gagal.');
+            return;
+        }
+
         setIsLoading(true);
 
-        // Simple check - you can change these credentials later
-        // or integrate with an API/Firebase
-        if (username === 'admin' && password === 'admin123') {
-            setTimeout(() => {
-                onLogin(true);
-                localStorage.setItem('admin_auth', 'true');
-            }, 800);
-        } else {
-            setTimeout(() => {
-                setError('Username atau password salah.');
-                setIsLoading(false);
-            }, 500);
+        try {
+            const { error: authError } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (authError) {
+                setError('Login gagal.');
+            } else {
+                // Successful login will be detected by onAuthStateChange in AdminLayout
+            }
+        } catch (err: any) {
+            setError('Login gagal. Terjadi kesalahan sistem.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -47,7 +63,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                         <p className="text-slate-400 text-sm font-light">Masukkan kredensial Anda untuk mengakses dashboard.</p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                         {error && (
                             <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4 flex items-center gap-3 text-rose-400 text-sm animate-shake">
                                 <AlertCircle size={18} />
@@ -56,15 +72,15 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
                         )}
 
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Username</label>
+                            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Email</label>
                             <div className="relative">
                                 <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                                 <input
-                                    type="text"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
                                     className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/50 transition-all font-medium"
-                                    placeholder="Username"
+                                    placeholder="email@contoh.com"
                                     required
                                 />
                             </div>

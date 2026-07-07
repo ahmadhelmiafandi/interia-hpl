@@ -97,15 +97,15 @@ export default function AdminDashboard() {
                 <p className="text-sm text-slate-500 mt-1">Ringkasan statistik website dan katalog 3D</p>
             </div>
 
-            {/* Main Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex items-center space-x-4 hover:shadow-md transition-shadow">
-                    <div className="p-3 bg-teal-50 text-teal-600 rounded-lg">
-                        <ShoppingCart size={24} />
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
+                <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 md:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 hover:shadow-md transition-shadow">
+                    <div className="p-2.5 md:p-3 bg-amber-50 text-amber-600 rounded-lg shrink-0">
+                        <ShoppingCart size={20} className="md:w-6 md:h-6" />
                     </div>
-                    <div className="flex-1">
-                        <p className="text-sm font-medium text-slate-500">Total Pesanan</p>
-                        <p className="text-2xl font-bold text-slate-800">{stats.totalOrders}</p>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-xs md:text-sm font-medium text-slate-500 truncate">Total Pesanan</p>
+                        <p className="text-lg md:text-2xl font-bold text-slate-800">{stats.totalOrders}</p>
                         {stats.pendingOrders > 0 && (
                             <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
                                 <Clock size={12} /> {stats.pendingOrders} pending
@@ -114,41 +114,41 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex items-center space-x-4 hover:shadow-md transition-shadow">
-                    <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
-                        <Package size={24} />
+                <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 md:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 hover:shadow-md transition-shadow">
+                    <div className="p-2.5 md:p-3 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
+                        <Package size={20} className="md:w-6 md:h-6" />
                     </div>
-                    <div className="flex-1">
-                        <p className="text-sm font-medium text-slate-500">Produk 3D</p>
-                        <p className="text-2xl font-bold text-slate-800">{stats.totalProducts}</p>
-                        <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1">
+                    <div className="flex-1 min-w-0">
+                        <p className="text-xs md:text-sm font-medium text-slate-500 truncate">Produk 3D</p>
+                        <p className="text-lg md:text-2xl font-bold text-slate-800">{stats.totalProducts}</p>
+                        <p className="text-[10px] md:text-xs text-emerald-600 mt-0.5 md:mt-1 flex items-center gap-1">
                             <CheckCircle2 size={12} /> {stats.activeProducts} aktif
                         </p>
                     </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex items-center space-x-4 hover:shadow-md transition-shadow">
-                    <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg">
-                        <TrendingUp size={24} />
+                <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 md:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 hover:shadow-md transition-shadow">
+                    <div className="p-2.5 md:p-3 bg-emerald-50 text-emerald-600 rounded-lg shrink-0">
+                        <TrendingUp size={20} className="md:w-6 md:h-6" />
                     </div>
-                    <div className="flex-1">
-                        <p className="text-sm font-medium text-slate-500">Estimasi Revenue</p>
-                        <p className="text-2xl font-bold text-slate-800">Rp {stats.totalRevenue.toLocaleString('id-ID')}</p>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex items-center space-x-4 hover:shadow-md transition-shadow">
-                    <div className="p-3 bg-rose-50 text-rose-600 rounded-lg">
-                        <Layers size={24} />
-                    </div>
-                    <div className="flex-1">
-                        <p className="text-sm font-medium text-slate-500">Material HPL</p>
-                        <p className="text-2xl font-bold text-slate-800">{stats.totalMaterials}</p>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-xs md:text-sm font-medium text-slate-500 truncate">Estimasi Revenue</p>
+                        <p className="text-base md:text-2xl font-bold text-slate-800 truncate">Rp {stats.totalRevenue.toLocaleString('id-ID')}</p>
                     </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl shadow-sm p-6 flex items-center space-x-4 text-white col-span-1 md:col-span-2 lg:col-span-2">
-                    <div className="p-3 bg-white/20 rounded-lg">
+                <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 md:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 hover:shadow-md transition-shadow">
+                    <div className="p-2.5 md:p-3 bg-rose-50 text-rose-600 rounded-lg shrink-0">
+                        <Layers size={20} className="md:w-6 md:h-6" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-xs md:text-sm font-medium text-slate-500 truncate">Material HPL</p>
+                        <p className="text-lg md:text-2xl font-bold text-slate-800">{stats.totalMaterials}</p>
+                    </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl shadow-sm p-4 md:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 text-white col-span-2 lg:col-span-4">
+                    <div className="p-2.5 md:p-3 bg-white/20 rounded-lg shrink-0">
                         <AlertCircle size={24} />
                     </div>
                     <div className="flex-1">
