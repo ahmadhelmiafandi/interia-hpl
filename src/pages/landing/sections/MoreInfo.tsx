@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, ChevronDown, Quote } from 'lucide-react';
+import { Star, ChevronDown, Quote, ChevronUp } from 'lucide-react';
 
 interface SectionProps {
     cmsData?: any[];
@@ -35,9 +35,11 @@ export function Team({ cmsData }: { cmsData?: any }) {
 
 export function Testimonials({ cmsData }: { cmsData?: any }) {
     const reviews = Array.isArray(cmsData) ? cmsData : (cmsData?.items || []);
+    const [showAll, setShowAll] = useState(false);
+    const visibleReviews = showAll ? reviews : reviews.slice(0, 3);
 
     return (
-        <section className="py-12 md:py-20 lg:py-24 bg-slate-900 relative">
+        <section id="testimonials" className="py-12 md:py-20 lg:py-24 bg-slate-900 relative">
             <div className="absolute top-0 w-full h-32 bg-gradient-to-b from-slate-900 to-transparent"></div>
             <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-6">
@@ -47,9 +49,9 @@ export function Testimonials({ cmsData }: { cmsData?: any }) {
                     </div>
                 </div>
 
-                <div className="flex md:grid md:grid-cols-3 gap-8 overflow-x-auto md:overflow-visible pb-8 md:pb-0 snap-x snap-mandatory hide-scrollbar">
-                    {reviews.map((r: any, i: number) => (
-                        <div key={i} className={`bg-slate-800 p-6 md:p-8 rounded-2xl border border-slate-700 relative shadow-xl transform md:hover:-translate-y-2 transition-transform duration-300 shrink-0 w-[85vw] md:w-auto snap-center reveal reveal-delay-${(i+1)*100}`}>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 pb-8">
+                    {visibleReviews.map((r: any, i: number) => (
+                        <div key={i} className="bg-slate-800 p-6 md:p-8 rounded-2xl border border-slate-700 relative shadow-xl transform md:hover:-translate-y-2 transition-transform duration-300 w-full reveal">
                             <Quote className="absolute top-6 right-6 text-slate-700 opacity-50" size={40} />
                             <div className="flex gap-1 mb-6">
                                 {[1, 2, 3, 4, 5].map(s => <Star key={s} size={18} className="fill-amber-400 text-amber-400" />)}
@@ -63,12 +65,28 @@ export function Testimonials({ cmsData }: { cmsData?: any }) {
                     ))}
                 </div>
 
-                {/* Mobile Slider Dots Indicator */}
-                <div className="flex md:hidden justify-center gap-2.5 mt-6">
-                    {reviews.map((_: any, i: number) => (
-                        <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-700"></div>
-                    ))}
-                </div>
+                {reviews.length > 3 && (
+                    <div className="flex justify-center mt-6">
+                        <button
+                            onClick={() => {
+                                if (showAll) {
+                                    // Beri jeda sedikit agar efek scroll halus sebelum DOM berubah mengecil
+                                    setTimeout(() => {
+                                        document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                    }, 10);
+                                }
+                                setShowAll(!showAll);
+                            }}
+                            className="px-8 py-3 bg-transparent text-slate-300 hover:text-white font-bold transition-all uppercase tracking-widest text-xs hover:underline underline-offset-8"
+                        >
+                            {showAll ? (
+                                <span className="flex items-center gap-2">Tampilkan Lebih Sedikit <ChevronUp size={16} /></span>
+                            ) : (
+                                <span className="flex items-center gap-2">Lihat Semua Testimoni <ChevronDown size={16} /></span>
+                            )}
+                        </button>
+                    </div>
+                )}
             </div>
         </section>
     );

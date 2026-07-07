@@ -218,9 +218,10 @@ export function Technology({ cmsData }: SectionProps) {
                     <div className="pt-4 md:pt-6">
                         <Link
                             to="/configurator"
-                            className="inline-flex items-center gap-3 md:gap-4 px-8 py-4 md:px-10 md:py-5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl md:rounded-2xl font-black text-base md:text-lg shadow-[0_20px_40px_rgba(176,141,87,0.2)] hover:shadow-[0_25px_50px_rgba(176,141,87,0.4)] transform hover:-translate-y-1.5 transition-all group active:scale-95 cursor-pointer"
+                            className="inline-flex items-center gap-3 px-6 md:px-8 py-3 md:py-4 bg-[#b08d57] hover:bg-[#8e7246] text-white rounded-full font-bold text-sm md:text-base transition-all shadow-lg shadow-[#b08d57]/30 hover:shadow-[#b08d57]/50 active:scale-95 group w-full sm:w-auto justify-center"
                         >
-                            {cmsData?.ctaLabel || "Coba Configurator"} <ArrowRight size={20} className="md:w-5.5 md:h-5.5 group-hover:translate-x-2 transition-transform" />
+                            {cmsData?.btnText || "Coba Configurator"} 
+                            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                         </Link>
                     </div>
                 </div>

@@ -68,22 +68,27 @@ Apakah Kakak ada waktu luang untuk kami jadwalkan *Survey Lokasi* dalam waktu de
     useEffect(() => {
         fetchOrders();
         api.getSettings().then(setSettings);
-
-        // Realtime Subscription
+        
+        // Setup realtime subscription
         const channel = supabase
-            .channel('realtime-orders')
+            .channel('orders-changes')
             .on(
-                'postgres_changes', 
-                { event: '*', table: 'orders', schema: 'public' }, 
+                'postgres_changes',
+                { event: '*', table: 'orders', schema: 'public' },
                 () => {
-                    console.log('Realtime update detected in orders table');
                     fetchOrders(false); // Silent refresh
                 }
             )
             .subscribe();
 
+        // Fallback polling every 15 seconds in case Supabase Realtime is not enabled
+        const interval = setInterval(() => {
+            fetchOrders(false);
+        }, 15000);
+
         return () => {
             supabase.removeChannel(channel);
+            clearInterval(interval);
         };
     }, []);
 
@@ -93,7 +98,13 @@ Apakah Kakak ada waktu luang untuk kami jadwalkan *Survey Lokasi* dalam waktu de
             setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
             
             // If selecting from modal, update local state
+            if (selectedOrder?.id === orderId) {
+                setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
+            }
             
+            showToast(`Status pesanan diperbarui menjadi ${newStatus}`);
+            // Trigger AdminLayout to update badge instantly
+            window.dispatchEvent(new Event('order_status_updated'));
             return true;
         } catch (err) {
             console.error('Update status error:', err);
@@ -105,6 +116,19 @@ Apakah Kakak ada waktu luang untuk kami jadwalkan *Survey Lokasi* dalam waktu de
         const success = await handleStatusChange(order.id, nextStatus);
         if (success) {
             sendStatusNotification(order, nextStatus);
+        }
+    };
+
+    const handleDeleteOrder = async (orderId: string) => {
+        if (window.confirm("Apakah Anda yakin ingin menghapus pesanan ini secara permanen?")) {
+            try {
+                await api.deleteOrder(orderId);
+                setOrders(orders.filter(o => o.id !== orderId));
+                showToast("Pesanan berhasil dihapus!");
+            } catch (err) {
+                console.error("Gagal menghapus:", err);
+                showToast("Terjadi kesalahan saat menghapus pesanan.");
+            }
         }
     };
 
@@ -182,6 +206,7 @@ Apakah Kakak ada waktu luang untuk kami jadwalkan *Survey Lokasi* dalam waktu de
                         Refresh
                     </button>
                     <button 
+                        onClick={() => showToast("Fitur pesanan manual dinonaktifkan. Gunakan 3D Configurator untuk pesanan baru.")}
                         className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-slate-200 active:scale-95"
                     >
                         <Plus size={14} />
@@ -251,12 +276,14 @@ Apakah Kakak ada waktu luang untuk kami jadwalkan *Survey Lokasi* dalam waktu de
                                                 <Eye size={14} />
                                             </button>
                                             <button 
+                                                onClick={() => setSelectedOrder(order)}
                                                 className="p-2 bg-blue-500 text-white hover:bg-blue-600 rounded-md transition-all active:scale-95 shadow-sm"
                                                 title="Edit"
                                             >
                                                 <Edit2 size={14} />
                                             </button>
                                             <button 
+                                                onClick={() => handleDeleteOrder(order.id)}
                                                 className="p-2 bg-rose-500 text-white hover:bg-rose-600 rounded-md transition-all active:scale-95 shadow-sm"
                                                 title="Hapus"
                                             >

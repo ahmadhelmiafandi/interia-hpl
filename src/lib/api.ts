@@ -111,7 +111,12 @@ const defaultData: WebsiteData = {
         testimonials: [
             { text: "Sangat terbantu dengan aplikasinya! Saya bisa coba-coba desain lemari dan langsung lihat harganya tanpa harus bolak-balik nanya admin.", name: "Rudi Hartono", loc: "Jakarta Selatan" },
             { text: "Hasil kitchen set untuk L-shape saya rapi banget. Tim workshop datang tepat waktu untuk survey ukuran ulang, memastikan semuanya presisi.", name: "Sinta Maharani", loc: "Tangerang" },
-            { text: "Material HPL nya top tier. Ngga nyangka bisa dapet harga segini untuk kualitas setara high-end boutique interior. Teknologinya bener-bener motong biaya marketing mereka!", name: "Kevin Aprilio", loc: "Bekasi" }
+            { text: "Material HPL nya top tier. Ngga nyangka bisa dapet harga segini untuk kualitas setara high-end boutique interior. Teknologinya bener-bener motong biaya marketing mereka!", name: "Kevin Aprilio", loc: "Bekasi" },
+            { text: "Awalnya ragu pesan online, tapi setelah tim Afandi datang survey, keraguannya hilang. Proses pengerjaan on time dan hasilnya memuaskan.", name: "Budi Santoso", loc: "Depok" },
+            { text: "Finishing rapi, material kuat. Lemari pakaian custom saya benar-benar pas dengan ukuran kamar yang tidak biasa.", name: "Nina Wati", loc: "Bogor" },
+            { text: "Pelayanan sangat ramah dan sabar melayani revisi desain. Harga sangat transparan sejak awal menggunakan fitur 3D configurator.", name: "Andi Wijaya", loc: "Jakarta Barat" },
+            { text: "Kualitas HPL tidak main-main. Sudah setahun dipakai kitchen set-nya masih seperti baru, anti air dan anti rayap. Recommended!", name: "Maya Fitri", loc: "Jakarta Timur" },
+            { text: "Sangat inovatif! Fitur desain 3D di webnya sangat membantu membayangkan hasil akhir. Eksekusi di lapangannya juga presisi.", name: "Hendra Gunawan", loc: "BSD City" }
         ],
         team: [
             { name: 'Aldo Pratama', role: 'Head of Architecture', img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400&auto=format&fit=crop' },
@@ -268,6 +273,14 @@ export const api = {
         
         if (error) throw error;
         return { ...data.data, id: data.id, createdAt: data.created_at };
+    },
+    deleteOrder: async (id: string): Promise<void> => {
+        const { error } = await supabase
+            .from('orders')
+            .delete()
+            .eq('id', id);
+        
+        if (error) throw error;
     },
     getSettings: async (): Promise<Settings> => {
         const data = await getWebsiteData();

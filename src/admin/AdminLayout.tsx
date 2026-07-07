@@ -39,8 +39,10 @@ const AdminLayout = () => {
             
             if (!error && data) {
                 const count = data.filter(item => {
-                    const status = item.data?.status?.toUpperCase() || 'PENDING';
-                    return status !== 'SELESAI' && status !== 'DRAFT';
+                    const o = item.data;
+                    if (!o || o.status === 'Draft' || !o.customer?.name) return false;
+                    const status = o.status?.toUpperCase() || 'PENDING';
+                    return status !== 'SELESAI';
                 }).length;
                 setPendingCount(count);
             }
@@ -64,8 +66,17 @@ const AdminLayout = () => {
             )
             .subscribe();
 
+        window.addEventListener('order_status_updated', fetchPendingCount);
+
+        // Fallback polling every 15 seconds in case Supabase Realtime is not enabled
+        const interval = setInterval(() => {
+            fetchPendingCount();
+        }, 15000);
+
         return () => {
             supabase.removeChannel(channel);
+            window.removeEventListener('order_status_updated', fetchPendingCount);
+            clearInterval(interval);
         };
     }, [isAuthenticated]);
 

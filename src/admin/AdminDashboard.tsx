@@ -14,13 +14,14 @@ interface DashboardStats {
 
 interface RecentOrder {
     id: string;
-    created_at: string;
-    data: {
-        totalPrice?: number;
-        config?: {
-            placedItems?: any[];
-        };
+    createdAt?: string;
+    created_at?: string;
+    totalPrice?: number;
+    estimatedPrice?: number;
+    config?: {
+        placedItems?: any[];
     };
+    [key: string]: any;
 }
 
 export default function AdminDashboard() {
@@ -44,24 +45,26 @@ export default function AdminDashboard() {
                     api3d.getMaterials3D()
                 ]);
 
-                const pendingCount = orders.filter((o: any) => 
-                    !o.data?.status || o.data?.status === 'pending' || o.data?.isDraft
+                const realOrders = orders.filter((o: any) => o && o.status !== 'Draft' && o.customer?.name);
+
+                const pendingCount = realOrders.filter((o: any) => 
+                    !o.status || o.status === 'PENDING'
                 ).length;
 
                 const activeProductsCount = products.filter((p: any) => p.is_active).length;
 
                 setStats({
-                    totalOrders: orders.length,
+                    totalOrders: realOrders.length,
                     pendingOrders: pendingCount,
                     totalProducts: products.length,
                     activeProducts: activeProductsCount,
-                    totalRevenue: orders.reduce((sum: number, order: any) => 
-                        sum + (order.data?.totalPrice || 0), 0
+                    totalRevenue: realOrders.reduce((sum: number, order: any) => 
+                        sum + (order.totalPrice || order.estimatedPrice || 0), 0
                     ),
                     totalMaterials: materials.length
                 });
 
-                setRecentOrders(orders.slice(0, 5));
+                setRecentOrders(realOrders.slice(0, 5));
             } catch (error) {
                 console.error('Failed to fetch dashboard data:', error);
             } finally {
@@ -70,6 +73,13 @@ export default function AdminDashboard() {
         };
 
         fetchData();
+
+        // Fallback polling every 15 seconds in case Supabase Realtime is not enabled
+        const interval = setInterval(() => {
+            fetchData();
+        }, 15000);
+
+        return () => clearInterval(interval);
     }, []);
 
     if (loading) {
@@ -154,7 +164,7 @@ export default function AdminDashboard() {
                 <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
                     <div className="p-6 border-b border-slate-100">
                         <h3 className="text-lg font-bold text-slate-800">Pesanan Terbaru</h3>
-                        <p className="text-sm text-slate-500 mt-1">5 pesanan terakhir dari konfigurator 3D</p>
+                        <p className="text-sm text-slate-500 mt-1">{recentOrders.length} pesanan terakhir dari konfigurator 3D</p>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
@@ -171,21 +181,21 @@ export default function AdminDashboard() {
                                     <tr key={order.id} className="hover:bg-slate-50 transition-colors">
                                         <td className="px-6 py-4">
                                             <span className="font-mono text-xs text-slate-600">
-                                                {order.id.slice(0, 8)}...
+                                                {String(order.id).length > 8 ? String(order.id).slice(0, 8) + '...' : order.id}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-slate-600">
-                                            {new Date(order.created_at).toLocaleDateString('id-ID', {
+                                            {new Date(order.createdAt || order.created_at || Date.now()).toLocaleDateString('id-ID', {
                                                 day: 'numeric',
                                                 month: 'short',
                                                 year: 'numeric'
                                             })}
                                         </td>
                                         <td className="px-6 py-4 text-slate-600">
-                                            {order.data?.config?.placedItems?.length || 0} item
+                                            {order.config?.placedItems?.length || 0} item
                                         </td>
                                         <td className="px-6 py-4 text-right font-bold text-slate-800">
-                                            Rp {(order.data?.totalPrice || 0).toLocaleString('id-ID')}
+                                            Rp {(order.totalPrice || order.estimatedPrice || 0).toLocaleString('id-ID')}
                                         </td>
                                     </tr>
                                 ))}

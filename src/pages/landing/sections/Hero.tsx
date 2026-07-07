@@ -82,43 +82,7 @@ export default function Hero({ cmsData }: HeroProps) {
               alt="Preview App"
             />
 
-            {/* Floating UI Elements matching Configurator theme */}
-            <div className="absolute -left-6 md:-left-12 top-6 md:top-10 bg-white/95 backdrop-blur-md p-3 md:p-4 rounded-xl shadow-2xl animate-float">
-              <div className="text-xs text-slate-500 font-bold uppercase mb-1">
-                {cmsData?.floatingCard1Title || 'Estimasi Realtime'}
-              </div>
-              <div className="text-xl text-slate-800 font-extrabold text-indigo-700">
-                {cmsData?.floatingCard1Value || 'Rp 12.500.000'}
-              </div>
-            </div>
-            <div
-              className="absolute -right-4 md:-right-8 bottom-12 md:bottom-20 bg-slate-900/95 border border-slate-700 backdrop-blur-md p-3 md:p-4 rounded-xl shadow-2xl animate-float"
-              style={{ animationDelay: "1s" }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-xs text-slate-400 font-bold uppercase">
-                    {cmsData?.floatingCard2Title || 'Bentuk Dapur'}
-                  </div>
-                  <div className="text-sm font-bold text-white">
-                    {cmsData?.floatingCard2Value || 'L-Shape Custom'}
-                  </div>
-                </div>
-              </div>
-            </div>
+
           </div>
         </div>
       </div>

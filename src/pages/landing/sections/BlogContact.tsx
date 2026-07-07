@@ -104,7 +104,8 @@ export function Blog({ cmsData, contactData }: BlogProps) {
           {articles.map((a: any, i: number) => (
             <article
               key={i}
-              className={`bg-white rounded-[2rem] overflow-hidden border border-slate-100 group shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] transition-all duration-500 transform hover:-translate-y-2 shrink-0 w-[80vw] sm:w-[60vw] md:w-auto snap-center reveal reveal-delay-${(i + 1) * 100}`}
+              onClick={() => setSelectedArticle(a)}
+              className={`cursor-pointer bg-white rounded-[2rem] overflow-hidden border border-slate-100 group shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] transition-all duration-500 transform hover:-translate-y-2 shrink-0 w-[80vw] sm:w-[60vw] md:w-auto snap-center reveal reveal-delay-${(i + 1) * 100}`}
             >
               <div className="h-56 overflow-hidden relative">
                 <div className="absolute top-5 left-5 bg-white/95 backdrop-blur text-[9px] font-black text-slate-900 px-3 py-1.5 rounded-full z-10 shadow-sm border border-slate-100 uppercase tracking-widest">
@@ -124,16 +125,15 @@ export function Blog({ cmsData, contactData }: BlogProps) {
                 <p className="text-slate-500 text-sm leading-relaxed mb-8 font-light line-clamp-3">
                   {a.desc}
                 </p>
-                <button
-                  onClick={() => setSelectedArticle(a)}
-                  className="text-[10px] font-black text-teal-600 uppercase tracking-[0.2em] cursor-pointer inline-flex items-center gap-3 group-hover:gap-5 transition-all border-none bg-transparent"
+                <div
+                  className="text-[10px] font-black text-teal-600 uppercase tracking-[0.2em] inline-flex items-center gap-3 group-hover:gap-5 transition-all border-none bg-transparent"
                 >
                   Baca Selengkapnya
                   <ArrowRight
                     size={14}
                     className="transform group-hover:translate-x-1 transition-transform"
                   />
-                </button>
+                </div>
               </div>
             </article>
           ))}
@@ -303,7 +303,7 @@ export function Contact({ cmsData }: ContactProps) {
               href={`https://wa.me/${cmsData.phone.replace(/[^0-9]/g, "")}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-3 px-8 py-4 bg-teal-500 hover:bg-teal-600 text-slate-900 rounded-xl font-bold shadow-lg shadow-teal-500/20 transition-all hover:-translate-y-1 uppercase tracking-wider text-sm"
+              className="flex-1 flex items-center justify-center gap-3 px-8 py-4 bg-[#b08d57] hover:bg-[#8e7246] text-white rounded-full font-bold shadow-lg shadow-[#b08d57]/30 transition-all hover:-translate-y-1 uppercase tracking-wider text-sm"
             >
               Chat WhatsApp
             </a>

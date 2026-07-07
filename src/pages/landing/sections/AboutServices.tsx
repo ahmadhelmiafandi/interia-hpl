@@ -34,7 +34,7 @@ export function About({ cmsData }: SectionProps) {
               {cmsData?.headingHighlight1 || "Seni Desain"}
             </span>{" "}
             & <br className="hidden md:block" />
-            <span className="text-slate-800 italic font-playfair">
+            <span className="text-slate-800">
               {cmsData?.headingHighlight2 || "Keahlian Presisi"}
             </span>
           </h2>
@@ -46,8 +46,23 @@ export function About({ cmsData }: SectionProps) {
               startOnVisible
             />
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 pt-4">
-            <div className="reveal-left reveal-delay-200 flex items-center gap-4 p-5 rounded-2xl bg-slate-50 border border-slate-100 group hover:border-teal-200 transition-colors">
+
+          {/* Photo for Mobile View (Hidden on Desktop) */}
+          <div className="block md:hidden relative w-full reveal-right mt-8 mb-8">
+            <div className="relative z-10 rounded-3xl overflow-hidden shadow-xl border-4 border-white group">
+              <img
+                src={
+                  cmsData.img ||
+                  "https://images.unsplash.com/photo-1540932239986-30128078f3d5?q=80&w=1200&auto=format&fit=crop"
+                }
+                className="w-full aspect-[4/5] object-cover transition-transform duration-700"
+                alt={cmsData?.imgAlt || "Tim Workshop Afandi Interior"}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 md:gap-4 pt-4">
+            <div className="flex-1 min-w-[200px] flex items-center gap-4 p-4 md:p-5 rounded-2xl bg-slate-50 border border-slate-100 group hover:border-teal-200 transition-colors">
               <div className="p-3 rounded-xl bg-white shadow-sm text-teal-600 group-hover:scale-110 transition-transform">
                 <ShieldCheck size={24} />
               </div>
@@ -60,7 +75,7 @@ export function About({ cmsData }: SectionProps) {
                 </p>
               </div>
             </div>
-            <div className="reveal-left reveal-delay-300 flex items-center gap-4 p-5 rounded-2xl bg-slate-50 border border-slate-100 group hover:border-teal-200 transition-colors">
+            <div className="flex-1 min-w-[200px] flex items-center gap-4 p-4 md:p-5 rounded-2xl bg-slate-50 border border-slate-100 group hover:border-teal-200 transition-colors">
               <div className="p-3 rounded-xl bg-white shadow-sm text-teal-600 group-hover:scale-110 transition-transform">
                 <Ruler size={24} />
               </div>
@@ -73,10 +88,38 @@ export function About({ cmsData }: SectionProps) {
                 </p>
               </div>
             </div>
+            <div className="flex-1 min-w-[200px] flex items-center gap-4 p-4 md:p-5 rounded-2xl bg-slate-50 border border-slate-100 group hover:border-teal-200 transition-colors">
+              <div className="w-12 h-12 flex-shrink-0 rounded-xl bg-white shadow-sm text-teal-600 flex flex-col items-center justify-center group-hover:scale-110 transition-transform">
+                <span className="font-black text-lg leading-none">{cmsData.badgeValue || "5+"}</span>
+                <span className="text-[9px] font-bold uppercase">{cmsData?.badgeUnit || "Thn"}</span>
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-900 mb-0.5">
+                  {cmsData.badgeTitle || "Tahun Pengalaman"}
+                </h4>
+                <p className="text-xs text-slate-400">
+                  {cmsData.badgeSub || "Workshop Produksi Sendiri"}
+                </p>
+              </div>
+            </div>
+            <div className="flex-1 min-w-[200px] flex items-center gap-4 p-4 md:p-5 rounded-2xl bg-slate-50 border border-slate-100 group hover:border-teal-200 transition-colors">
+              <div className="p-3 rounded-xl bg-white shadow-sm text-teal-600 group-hover:scale-110 transition-transform">
+                <ThumbsUp size={24} />
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-900 mb-0.5">
+                  {cmsData?.feature3Title || "Kepuasan Klien"}
+                </h4>
+                <p className="text-xs text-slate-400">
+                  {cmsData?.feature3Desc || "Konsultasi & layanan purnajual"}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="flex-1 relative w-full reveal-right">
+        {/* Photo for Desktop View (Hidden on Mobile) */}
+        <div className="hidden md:block flex-1 relative w-full reveal-right">
           <div className="relative z-10 rounded-3xl overflow-hidden shadow-2xl border-8 border-white group">
             <img
               src={
@@ -90,27 +133,6 @@ export function About({ cmsData }: SectionProps) {
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
           </div>
 
-          {/* Floating Experience Badge with Glassmorphism */}
-          <div className="absolute -bottom-6 -left-4 md:-bottom-12 md:-left-12 bg-white/90 backdrop-blur-md p-5 md:p-8 rounded-[2rem] shadow-2xl border border-white/50 z-20 animate-float max-w-[280px] md:max-w-none">
-            <div className="flex items-center gap-5 md:gap-6">
-              <div className="w-14 h-14 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 text-white flex flex-col items-center justify-center shadow-lg shadow-teal-500/30">
-                <span className="font-black text-2xl md:text-3xl leading-none">
-                  {cmsData.badgeValue || "5+"}
-                </span>
-                <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-wider mt-1 opacity-80">
-                  {cmsData?.badgeUnit || "Years"}
-                </span>
-              </div>
-              <div className="pr-4 md:pr-8 border-r border-slate-100">
-                <h5 className="font-black text-lg md:text-2xl text-slate-900 leading-tight mb-1">
-                  {cmsData.badgeTitle || "Tahun Pengalaman"}
-                </h5>
-                <p className="text-teal-600 font-bold text-[10px] md:text-xs uppercase tracking-[0.15em]">
-                  {cmsData.badgeSub || "Workshop Produksi Sendiri"}
-                </p>
-              </div>
-            </div>
-          </div>
 
           {/* Decorative element behind the image */}
           <div className="absolute top-12 left-12 right-[-24px] bottom-[-24px] border-2 border-teal-100 rounded-3xl -z-0 hidden md:block"></div>
@@ -172,7 +194,7 @@ export function Services({ cmsData, contactData }: SectionProps) {
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 leading-tight tracking-tight">
             Spesialisasi Kami dalam <br />
-            <span className="italic font-playfair text-teal-600 font-normal">
+            <span className="text-teal-600">
               Membangun Kenyamanan
             </span>
           </h2>
