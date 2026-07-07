@@ -14,6 +14,8 @@ function terbilang(angka: number): string {
     if (angka < 1000000000000) return terbilang(Math.floor(angka / 1000000000)) + " Miliar " + (angka % 1000000000 !== 0 ? terbilang(angka % 1000000000) : "");
     return "";
 }
+import { useDebounce } from '../hooks/useDebounce';
+import { Pagination } from '../components/ui/Pagination';
 import { api, supabase } from '../lib/api';
 import { MATERIAL_COLORS, WALL_POS } from '../lib/constants';
 import { CMSHeader } from './cms/CMSComponents';
@@ -38,6 +40,13 @@ export default function AdminOrders() {
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [settings, setSettings] = useState<Record<string, any> | null>(null);
     const [activeTab, setActiveTab] = useState('summary');
+    
+    // Pagination & Filtering state
+    const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
+    const [filterStatus, setFilterStatus] = useState('ALL');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const copyToClipboard = (text: string, label: string) => {
         navigator.clipboard.writeText(text);
@@ -191,6 +200,11 @@ Apakah Kakak ada waktu luang untuk kami jadwalkan *Survey Lokasi* dalam waktu de
         }
     };
 
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearchTerm, filterStatus]);
+
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[400px] bg-white rounded-[2rem] border border-slate-100 shadow-sm">
@@ -199,6 +213,21 @@ Apakah Kakak ada waktu luang untuk kami jadwalkan *Survey Lokasi* dalam waktu de
             </div>
         );
     }
+
+    // Filter logic
+    const filteredOrders = orders.filter(order => {
+        const matchesSearch = (order.customer?.name || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase()) || 
+                              String(order.id).toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+        const matchesStatus = filterStatus === 'ALL' || order.status?.toUpperCase() === filterStatus;
+        return matchesSearch && matchesStatus;
+    });
+
+    // Pagination logic
+    const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+    const paginatedOrders = filteredOrders.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     return (
         <div className="space-y-8 animate-fade-in">
@@ -229,6 +258,28 @@ Apakah Kakak ada waktu luang untuk kami jadwalkan *Survey Lokasi* dalam waktu de
                 </div>
             </div>
 
+            <div className="flex flex-col md:flex-row gap-4 mb-4">
+                <input 
+                    type="text" 
+                    placeholder="Cari nama atau ID pesanan..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm"
+                />
+                <select 
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm bg-white cursor-pointer"
+                >
+                    <option value="ALL">Semua Status</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="SUDAH DP">Sudah DP</option>
+                    <option value="DIPROSES">Diproses</option>
+                    <option value="LUNAS">Lunas</option>
+                    <option value="SELESAI">Selesai</option>
+                </select>
+            </div>
+
             <div className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
@@ -242,16 +293,16 @@ Apakah Kakak ada waktu luang untuk kami jadwalkan *Survey Lokasi* dalam waktu de
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                            {orders.length === 0 ? (
+                            {paginatedOrders.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="px-8 py-20 text-center">
                                         <div className="flex flex-col items-center gap-3 text-slate-300">
                                             <ShoppingBag size={48} strokeWidth={1.5} />
-                                            <p className="text-sm font-bold uppercase tracking-widest">Belum ada pesanan masuk</p>
+                                            <p className="text-sm font-bold uppercase tracking-widest">Tidak ada pesanan ditemukan</p>
                                         </div>
                                     </td>
                                 </tr>
-                            ) : orders.map((order) => (
+                            ) : paginatedOrders.map((order) => (
                                 <tr key={order.id} className="hover:bg-slate-50/50 transition-colors group">
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
@@ -311,6 +362,12 @@ Apakah Kakak ada waktu luang untuk kami jadwalkan *Survey Lokasi* dalam waktu de
                     </table>
                 </div>
             </div>
+            
+            <Pagination 
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+            />
 
             {/* Modern Detail Modal */}
             {selectedOrder && (

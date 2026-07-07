@@ -12,18 +12,66 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    
+    // Rate limiting state
+    const [isBanned, setIsBanned] = useState(false);
+    const [banTimeRemaining, setBanTimeRemaining] = useState(0);
+
+    // Initialize rate limiting from localStorage
+    React.useEffect(() => {
+        const checkBanStatus = () => {
+            const banUntil = localStorage.getItem('loginBanUntil');
+            if (banUntil) {
+                const remaining = parseInt(banUntil) - Date.now();
+                if (remaining > 0) {
+                    setIsBanned(true);
+                    setBanTimeRemaining(Math.ceil(remaining / 60000));
+                    return true;
+                } else {
+                    localStorage.removeItem('loginBanUntil');
+                    localStorage.removeItem('loginAttempts');
+                    setIsBanned(false);
+                }
+            }
+            return false;
+        };
+
+        checkBanStatus();
+        const interval = setInterval(checkBanStatus, 60000); // Check every minute
+        return () => clearInterval(interval);
+    }, []);
+
+    const handleFailedAttempt = () => {
+        const attempts = parseInt(localStorage.getItem('loginAttempts') || '0') + 1;
+        if (attempts >= 5) {
+            const banTime = Date.now() + 10 * 60 * 1000; // 10 minutes from now
+            localStorage.setItem('loginBanUntil', banTime.toString());
+            localStorage.setItem('loginAttempts', '5');
+            setIsBanned(true);
+            setBanTimeRemaining(10);
+            setError('Terlalu banyak percobaan gagal. Anda diblokir selama 10 menit.');
+        } else {
+            localStorage.setItem('loginAttempts', attempts.toString());
+            setError(`Login gagal. Sisa percobaan: ${5 - attempts}`);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError('');
 
+        if (isBanned) {
+            setError(`Anda masih diblokir. Coba lagi dalam ${banTimeRemaining} menit.`);
+            return;
+        }
+
         if (!email || !email.includes('@') || !email.includes('.')) {
-            setError('Login gagal.');
+            handleFailedAttempt();
             return;
         }
 
         if (!password) {
-            setError('Login gagal.');
+            handleFailedAttempt();
             return;
         }
 
@@ -36,12 +84,15 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             });
 
             if (authError) {
-                setError('Login gagal.');
+                handleFailedAttempt();
             } else {
+                // Successful login
+                localStorage.removeItem('loginAttempts');
+                localStorage.removeItem('loginBanUntil');
                 // Successful login will be detected by onAuthStateChange in AdminLayout
             }
         } catch (err: any) {
-            setError('Login gagal. Terjadi kesalahan sistem.');
+            handleFailedAttempt();
         } finally {
             setIsLoading(false);
         }
@@ -103,11 +154,15 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
 
                         <button
                             type="submit"
-                            disabled={isLoading}
-                            className={`w-full bg-teal-500 hover:bg-teal-600 text-slate-900 font-black py-4 rounded-xl shadow-lg shadow-teal-500/10 transition-all flex items-center justify-center gap-2 group ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            disabled={isLoading || isBanned}
+                            className={`w-full ${isBanned ? 'bg-rose-500 hover:bg-rose-600 text-white' : 'bg-teal-500 hover:bg-teal-600 text-slate-900'} font-black py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 group ${(isLoading || isBanned) ? 'opacity-70 cursor-not-allowed' : ''}`}
                         >
                             {isLoading ? (
                                 <div className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+                            ) : isBanned ? (
+                                <>
+                                    Terblokir ({banTimeRemaining}m)
+                                </>
                             ) : (
                                 <>
                                     Log In <LogIn size={18} className="group-hover:translate-x-1 transition-transform" />

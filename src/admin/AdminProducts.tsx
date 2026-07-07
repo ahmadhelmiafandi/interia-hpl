@@ -7,6 +7,8 @@ import {
     Power, PowerOff
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useDebounce } from '../hooks/useDebounce';
+import { Pagination } from '../components/ui/Pagination';
 
 // Helper slugify
 const slugify = (text: string) => text.toLowerCase().replace(/[\s_]+/g, '-').replace(/[^\w-]+/g, '');
@@ -17,6 +19,13 @@ export default function AdminProducts() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
+    
+    // Pagination & Filtering state
+    const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
+    const [filterCategory, setFilterCategory] = useState('ALL');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
     
     // Form state
     const [formData, setFormData] = useState<Partial<CatalogItem>>({
@@ -186,11 +195,30 @@ export default function AdminProducts() {
         setFormData(prev => ({ ...prev, [field]: Number(value) }));
     };
 
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearchTerm, filterCategory]);
+
     if (loading) return (
         <div className="flex flex-col items-center justify-center p-32">
             <Loader2 className="animate-spin text-teal-600 mb-4" size={40} />
             <p className="text-slate-500 font-medium animate-pulse">Memuat Katalog 3D...</p>
         </div>
+    );
+
+    // Filter logic
+    const filteredProducts = products.filter(product => {
+        const matchesSearch = product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+        const matchesCategory = filterCategory === 'ALL' || product.category === filterCategory;
+        return matchesSearch && matchesCategory;
+    });
+
+    // Pagination logic
+    const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+    const paginatedProducts = filteredProducts.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
     );
 
     return (
@@ -208,6 +236,29 @@ export default function AdminProducts() {
                         <Plus size={18} /> Tambah Furnitur 3D
                     </button>
                 </div>
+
+                <div className="p-4 border-b border-slate-200 flex flex-col md:flex-row gap-4 bg-white">
+                    <input 
+                        type="text" 
+                        placeholder="Cari produk..." 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent text-sm"
+                    />
+                    <select 
+                        value={filterCategory}
+                        onChange={(e) => setFilterCategory(e.target.value)}
+                        className="px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent text-sm bg-white cursor-pointer"
+                    >
+                        <option value="ALL">Semua Kategori</option>
+                        <option value="kitchen">Kitchen Set</option>
+                        <option value="wardrobe">Lemari Pakaian</option>
+                        <option value="tv_cabinet">Rak TV</option>
+                        <option value="work_desk">Meja Kerja</option>
+                        <option value="bed">Tempat Tidur</option>
+                        <option value="other">Lainnya</option>
+                    </select>
+                </div>
                 
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
@@ -223,14 +274,14 @@ export default function AdminProducts() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {products.length === 0 ? (
+                            {paginatedProducts.length === 0 ? (
                                 <tr>
                                     <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
                                         <Box size={48} className="mx-auto mb-3 opacity-20" />
-                                        <p>Belum ada produk di katalog 3D.</p>
+                                        <p>Tidak ada produk ditemukan.</p>
                                     </td>
                                 </tr>
-                            ) : products.map((product) => (
+                            ) : paginatedProducts.map((product) => (
                                 <tr key={product.id} className="hover:bg-slate-50/80 transition-colors group">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
@@ -314,6 +365,12 @@ export default function AdminProducts() {
                     </table>
                 </div>
             </div>
+
+            <Pagination 
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+            />
 
             {/* Form Modal (Add / Edit) */}
             {isModalOpen && (
