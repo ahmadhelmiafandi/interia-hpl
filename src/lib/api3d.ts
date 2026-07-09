@@ -58,7 +58,7 @@ export interface Material3D {
 
 import { fallbackItems3D, fallbackMaterials } from '../data/fallback3dData';
 
-const USE_SUPABASE_CATALOG = true;
+const USE_SUPABASE_CATALOG = false;
 
 async function fetchWithFallback<T>(tableName: string, fallbackData: T, queryFn: () => PromiseLike<any>): Promise<T> {
   if (!USE_SUPABASE_CATALOG) {

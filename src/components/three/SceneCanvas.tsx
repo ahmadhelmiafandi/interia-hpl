@@ -413,6 +413,7 @@ export default function SceneCanvas() {
       {/* R3F Canvas Layer */}
       <div className="absolute inset-0 z-10 w-full h-full">
         <Canvas
+          id="three-canvas"
           shadows={{ type: THREE.PCFShadowMap }}
           gl={{ alpha: true, preserveDrawingBuffer: true, antialias: true }}
           onPointerMissed={handleCanvasPointerMissed}

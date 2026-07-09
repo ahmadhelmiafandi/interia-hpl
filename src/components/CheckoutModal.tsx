@@ -172,10 +172,24 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
         setProcessingStatus('Menyimpan pesanan ke database...');
         // Capture 3D Design Snapshot
         let designSnapshot = '';
-        const canvas = document.querySelector('canvas');
+        const canvas = (document.getElementById('three-canvas') || document.querySelector('canvas')) as HTMLCanvasElement | null;
         if (canvas) {
           try {
-            designSnapshot = canvas.toDataURL('image/jpeg', 0.8);
+            // Create a temporary canvas to draw a solid background
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const ctx = tempCanvas.getContext('2d');
+            if (ctx) {
+              // Fill background with solid off-white (matching the 3D viewer background)
+              ctx.fillStyle = '#f8fafc';
+              ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+              // Draw the 3D WebGL canvas content on top
+              ctx.drawImage(canvas, 0, 0);
+              designSnapshot = tempCanvas.toDataURL('image/jpeg', 0.8);
+            } else {
+              designSnapshot = canvas.toDataURL('image/jpeg', 0.8);
+            }
           } catch (e) {
             console.error('Failed to capture 3D design snapshot:', e);
           }
